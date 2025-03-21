@@ -1,6 +1,7 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getStorage } from "firebase/storage";
+import { getAuth } from "firebase/auth";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -8,12 +9,12 @@ import { getStorage } from "firebase/storage";
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: "projectmern-424e6.firebaseapp.com",
-  projectId: "projectmern-424e6",
-  storageBucket: "projectmern-424e6.firebasestorage.app",
-  messagingSenderId: "841285728455",
-  appId: "1:841285728455:web:951ac8dc765d0ebbf0e6e2",
-  measurementId: "G-51R6YFG4NR",
+  authDomain: "dhanajalee-mern-app.firebaseapp.com",
+  projectId: "dhanajalee-mern-app",
+  storageBucket: "dhanajalee-mern-app.firebasestorage.app",
+  messagingSenderId: "1068621903480",
+  appId: "1:1068621903480:web:45d1caf80d7c13c72d5f8d",
+  measurementId: "G-MD4HJJSQLP"
 };
 
 // Initialize Firebase
