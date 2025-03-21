@@ -2,7 +2,7 @@ import React from "react";
 import { Navbar, TextInput, Button, Dropdown, Avatar } from "flowbite-react";
 import { Link, useLocation } from "react-router-dom";
 import { AiOutlineSearch } from "react-icons/ai";
-import { FaMoon, FaSun } from "react-icons/fa";
+import { FaMoon, FaSun, FaShoppingCart } from "react-icons/fa";
 import { useSelector, useDispatch } from "react-redux";
 import { toggleTheme } from "../redux/theme/themeSlice";
 import { signoutSuccess } from "../redux/user/userSlice";
@@ -13,8 +13,8 @@ export default function Header() {
   const { currentUser } = useSelector((state) => state.user);
   const { theme } = useSelector((state) => state.theme);
 
+  console.log("Current User: ", currentUser);
 
-  console.log("Current User : " , currentUser)
   const handleSignout = async () => {
     try {
       const res = await fetch("/api/user/signout", {
@@ -53,7 +53,8 @@ export default function Header() {
       <Button className="w-12 h-10 lg:hidden" color="gray" pill>
         <AiOutlineSearch />
       </Button>
-      <div className="flex gap-2 md:order-2">
+      <div className="flex gap-2 md:order-2 items-center">
+        {/* Dark Mode Toggle */}
         <Button
           className="w-12 h-10 hidden sm:inline"
           color="gray"
@@ -63,6 +64,14 @@ export default function Header() {
           {theme === "light" ? <FaSun /> : <FaMoon />}
         </Button>
 
+        {/* Cart Icon */}
+        <Link to="/cart">
+          <Button className="w-12 h-10" color="gray" pill>
+            <FaShoppingCart className="w-5 h-5" />
+          </Button>
+        </Link>
+
+        {/* User Dropdown */}
         {currentUser ? (
           <Dropdown
             arrowIcon={false}
