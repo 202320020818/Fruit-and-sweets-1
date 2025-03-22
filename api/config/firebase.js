@@ -1,6 +1,14 @@
 import admin from "firebase-admin";
 import dotenv from "dotenv";
-import serviceAccount from "../utils/projectmern-424e6-firebase-adminsdk-fbsvc-ae32af5b7a.json" assert { type: "json" };
+import fs from "fs";
+
+
+
+
+
+const serviceAccount = JSON.parse(
+  fs.readFileSync(new URL("../utils/projectmern-424e6-firebase-adminsdk-fbsvc-ae32af5b7a.json", import.meta.url))
+);
 
 dotenv.config();
 
