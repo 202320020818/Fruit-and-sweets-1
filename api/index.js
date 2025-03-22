@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import userRoutes from "./routes/user.route.js";
 import authRoutes from "./routes/auth.route.js";
 import cartRoutes from "./routes/cart.route.js"
+import paymentRoutes from "./routes/payment.route.js";
 import cookieParser from 'cookie-parser';
 import admin from './config/firebase.js'; 
 import cors from 'cors';
@@ -45,7 +46,7 @@ app.listen(3000, () => {
 app.use("/api/user", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use('/api/cart', cartRoutes);
-
+app.use('/api/payment', paymentRoutes); 
 // Error handling middleware
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;

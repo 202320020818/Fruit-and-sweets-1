@@ -2,9 +2,7 @@ import React from "react";
 import { Card, Col, Row, Button } from "antd";
 import { AiOutlineShoppingCart } from "react-icons/ai";
 import DummyImg from "../assests/img1.jpg";
-
-// Replace with your actual user ID (you should get this from Redux or context)
-const userId = "userIdFromRedux"; 
+import { useSelector } from "react-redux";
 
 const dummyData = Array.from({ length: 30 }, (_, index) => ({
   itemName: `Product ${index + 1}`,
@@ -16,9 +14,15 @@ const dummyData = Array.from({ length: 30 }, (_, index) => ({
   category: index % 2 === 0 ? "Fruits" : "Sweets",
 }));
 
-const addToCart = async (product) => {
+// Function to handle adding an item to the cart
+const addToCart = async (product, userId) => {
+  if (!userId) {
+    alert("Please log in to add items to the cart");
+    return;
+  }
+
   const cartItem = {
-    userId,
+    userId,          // Pass userId from Redux to backend
     itemName: product.itemName,
     price: product.price,
     image: product.image,
@@ -34,7 +38,7 @@ const addToCart = async (product) => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(cartItem),
+      body: JSON.stringify(cartItem),  // Send cart item with userId to the backend
     });
 
     const data = await res.json();
@@ -50,6 +54,10 @@ const addToCart = async (product) => {
 };
 
 const Products = () => {
+  // Access the userId from Redux store
+  const currentUser = useSelector((state) => state.user.currentUser);
+  const userId = currentUser?._id;  
+  console.log("Ussss",userId)
   return (
     <div style={{ padding: "30px" }}>
       <h2>Products</h2>
@@ -67,7 +75,7 @@ const Products = () => {
                   <Button 
                     type="primary" 
                     icon={<AiOutlineShoppingCart />} 
-                    onClick={() => addToCart(product)}
+                    onClick={() => addToCart(product, userId)}  // Pass userId to addToCart function
                   >
                     Add to Cart
                   </Button>
