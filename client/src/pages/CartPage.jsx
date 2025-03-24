@@ -1,20 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { Card, Row, Col, Button, InputNumber, Typography, Tooltip, List, Image } from "antd";
 import { MinusOutlined, PlusOutlined, DeleteOutlined, HeartOutlined } from "@ant-design/icons";
-import { useSelector } from "react-redux"; 
-import { loadStripe } from "@stripe/stripe-js"; 
-import { useNavigate } from "react-router-dom"; 
+import { useSelector } from "react-redux";
+import { loadStripe } from "@stripe/stripe-js";
+import { useNavigate } from "react-router-dom";
 
 const { Title, Text } = Typography;
 
 const stripePromise = loadStripe("pk_test_51R1EIIDWYegqaTAkzg9ID8J9AvbcIW7Aq28MPvbwFRqlajzS5FWLldM4XGFW4Xp5NO2sGpGZWXow3ejmHIXChlkC00Dw1heT33");
 
 export default function CartPage() {
-  const currentUser = useSelector((state) => state.user.currentUser); 
-  const userId = currentUser?._id; 
-  const navigate = useNavigate(); 
+  const currentUser = useSelector((state) => state.user.currentUser);
+  const userId = currentUser?._id;
+  const navigate = useNavigate();
 
-  const [cartItems, setCartItems] = useState([]); 
+  const [cartItems, setCartItems] = useState([]);
 
   // Fetch cart items when component mounts
   useEffect(() => {
@@ -25,7 +25,7 @@ export default function CartPage() {
           const data = await response.json();
 
           if (response.ok) {
-            setCartItems(data.data); 
+            setCartItems(data.data); // Assuming 'data' contains an array of cart items
           } else {
             console.error("Error fetching cart items:", data.message);
           }
@@ -39,27 +39,27 @@ export default function CartPage() {
   }, [userId]);
 
   // Handle quantity update
-const handleQuantityChange = async (itemId, quantity) => {
-  try {
-    const updatedCartItems = cartItems.map((item) =>
-      item.itemId === itemId ? { ...item, quantity } : item
-    );
-    setCartItems(updatedCartItems);
+  const handleQuantityChange = async (itemId, quantity) => {
+    try {
+      const updatedCartItems = cartItems.map((item) =>
+        item.itemId === itemId ? { ...item, quantity } : item
+      );
+      setCartItems(updatedCartItems);
 
-    // Update in backend
-    const response = await fetch(`/api/cart/item/${itemId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ quantity }),
-    });
+      // Update in backend
+      const response = await fetch(`/api/cart/item/${itemId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quantity }),
+      });
 
-    if (!response.ok) {
-      throw new Error('Failed to update quantity');
+      if (!response.ok) {
+        throw new Error('Failed to update quantity');
+      }
+    } catch (error) {
+      console.error('Error updating item quantity:', error);
     }
-  } catch (error) {
-    console.error('Error updating item quantity:', error);
-  }
-};
+  };
 
   // Handle item deletion
   const handleDelete = async (itemId) => {
@@ -97,10 +97,10 @@ const handleQuantityChange = async (itemId, quantity) => {
       const session = await response.json();
 
       if (session.id) {
-        setCartItems([]);  
-
+        setCartItems([]);  // Clear the cart after successful checkout session creation
+        
         const { error } = await stripe.redirectToCheckout({ sessionId: session.id });
-
+        
         if (!error) {
           // Confirm payment in backend
           const paymentConfirmationResponse = await fetch("/api/payment/confirm-payment", {
@@ -131,6 +131,8 @@ const handleQuantityChange = async (itemId, quantity) => {
     }
   };
 
+  const totalAmount = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+
   return (
     <div style={{ padding: "20px", backgroundColor: "#f5f5f5", minHeight: "100vh" }}>
       <Row gutter={16} justify="center">
@@ -155,7 +157,7 @@ const handleQuantityChange = async (itemId, quantity) => {
                           type="text"
                           danger
                           icon={<DeleteOutlined />}
-                          onClick={() => handleDelete(item.itemId)} 
+                          onClick={() => handleDelete(item.itemId)}
                         />
                       </Tooltip>
                       <Tooltip title="Move to wishlist">
@@ -167,17 +169,17 @@ const handleQuantityChange = async (itemId, quantity) => {
                         min={1}
                         value={item.quantity}
                         style={{ width: "60px" }}
-                        onChange={(value) => handleQuantityChange(item.itemId, value)} 
+                        onChange={(value) => handleQuantityChange(item.itemId, value)}
                       />
                       <Button
                         icon={<MinusOutlined />}
                         style={{ marginLeft: "5px" }}
-                        onClick={() => handleQuantityChange(item.itemId, Math.max(item.quantity - 1, 1))} 
+                        onClick={() => handleQuantityChange(item.itemId, Math.max(item.quantity - 1, 1))}
                       />
                       <Button
                         icon={<PlusOutlined />}
                         style={{ marginLeft: "5px" }}
-                        onClick={() => handleQuantityChange(item.itemId, item.quantity + 1)} 
+                        onClick={() => handleQuantityChange(item.itemId, item.quantity + 1)}
                       />
                     </Col>
                     <Col span={4}>
@@ -189,28 +191,44 @@ const handleQuantityChange = async (itemId, quantity) => {
             />
           </Card>
           <Card style={{ marginTop: 16 }}>
-            <Title level={5}>Expected shipping delivery</Title>
-            <Text>12.10.2020 - 14.10.2020</Text>
+            {cartItems.length === 0 ? (
+              <Text type="danger">No items available in your cart</Text>
+            ) : (
+              <>
+                <Title level={5}>Expected shipping delivery</Title>
+                <Text>12.10.2020 - 14.10.2020</Text>
+              </>
+            )}
           </Card>
         </Col>
 
         <Col md={8}>
           <Card title="Summary">
-            <List>
-              <List.Item>
-                <Text>Products</Text>
-                <Text>${cartItems.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2)}</Text>
-              </List.Item>
-              <List.Item>
-                <Text>Shipping</Text>
-                <Text>Gratis</Text>
-              </List.Item>
-              <List.Item>
-                <Text strong>Total (including VAT)</Text>
-                <Text strong>${cartItems.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2)}</Text>
-              </List.Item>
-            </List>
-            <Button type="primary" block style={{ marginTop: 16 }} onClick={handleCheckout}>
+            {cartItems.length > 0 ? (
+              <List>
+                <List.Item>
+                  <Text>Products</Text>
+                  <Text>${totalAmount.toFixed(2)}</Text>
+                </List.Item>
+                <List.Item>
+                  <Text>Shipping</Text>
+                  <Text>Gratis</Text>
+                </List.Item>
+                <List.Item>
+                  <Text strong>Total (including VAT)</Text>
+                  <Text strong>${totalAmount.toFixed(2)}</Text>
+                </List.Item>
+              </List>
+            ) : (
+              <Text type="primary">No items in cart to checkout</Text>
+            )}
+            <Button
+              type="primary"
+              block
+              style={{ marginTop: 16 }}
+              onClick={handleCheckout}
+              disabled={cartItems.length === 0} // Disable checkout button if no items
+            >
               Go to checkout
             </Button>
           </Card>

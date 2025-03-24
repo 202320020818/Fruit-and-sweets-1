@@ -1,16 +1,25 @@
-import Order from "../models/order.model.js";
+import { v4 as uuidv4 } from 'uuid';
+import Order from "../models/order.model.js"; 
 
-export const getOrderById = async (req, res) => {
-  const { orderId } = req.params;
+
+
+// Import Order schema
+export const getCompletedOrders = async (req, res) => {
+  const { userId } = req.params; // userId from URL params
 
   try {
-    const order = await Order.findOne({ orderId });
-    if (!order) return res.status(404).json({ message: "Order not found" });
+    // Find all orders for the user with status 'completed'
+    const completedOrders = await Order.find({ userId, status: 'completed' })
+      .sort({ createdAt: -1 })  // Sort orders by most recent first
+      .exec();
 
-    res.status(200).json({ success: true, data: order });
+    if (!completedOrders || completedOrders.length === 0) {
+      return res.status(404).json({ message: "No completed orders found for this user." });
+    }
+
+    res.status(200).json({ message: "Completed orders retrieved successfully", data: completedOrders });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching order", error: error.message });
+    console.error("Error fetching completed orders:", error);
+    res.status(500).json({ message: "Error fetching completed orders", error: error.message });
   }
-
-  
 };
