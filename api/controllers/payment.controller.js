@@ -66,14 +66,30 @@ export const createCheckoutSession = async (req, res) => {
   try {
     const { items, totalAmount, userId } = req.body;
 
+    // Check if items is an array and is not empty
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({
+        message: "The items array is missing or empty.",
+      });
+    }
+
+    // Calculate the total amount in USD (make sure the totalAmount is in USD)
+    const totalAmountInCents = Math.round(totalAmount * 100); // Convert to cents
+    
+    // Check if the total amount is at least 50 cents
+    if (totalAmountInCents < 50) {
+      return res.status(400).json({
+        message: "The total amount must be at least 50 cents.",
+      });
+    }
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: items.map(item => ({
         price_data: {
-          currency: 'usd',
+          currency: 'lkr', // Ensure currency is set to 'usd' or another valid currency
           product_data: {
             name: item.name,
-            images: [item.image],
             metadata: { itemId: item.itemId },
           },
           unit_amount: Math.round(item.price * 100), // Convert price to cents
@@ -81,8 +97,8 @@ export const createCheckoutSession = async (req, res) => {
         quantity: item.quantity,
       })),
       mode: 'payment',
-      success_url: `${process.env.CLIENT_URL}/payment-success`,
-      cancel_url: `${process.env.CLIENT_URL}/cart`,
+      success_url: "http://localhost:5173/payment-success",
+      cancel_url: "http://localhost:5173/cancel",
       metadata: {
         userId,
         items: JSON.stringify(items),
@@ -95,6 +111,8 @@ export const createCheckoutSession = async (req, res) => {
     res.status(500).json({ message: 'Failed to create checkout session' });
   }
 };
+
+
 
 // Handle Webhook from Stripe
 export const handleStripeWebhook = async (req, res) => {

@@ -7,8 +7,8 @@ import cartRoutes from "./routes/cart.route.js";
 import paymentRoutes from "./routes/payment.route.js";
 import orderRoutes from './routes/order.route.js'; // Import order routes
 import cookieParser from 'cookie-parser';
+import admin from "./config/firebase.js";
 import cors from 'cors';
-import admin from './config/firebase.js'; 
 import { stripeRawBodyMiddleware } from './middleware/stripeRawBoady.js';
 
 dotenv.config();
@@ -22,11 +22,11 @@ mongoose
     console.log(error);
   });
 
-
+  
 const app = express();
 
 // Use the raw body middleware for the Stripe webhook route
-app.use(stripeRawBodyMiddleware);
+//app.use(stripeRawBodyMiddleware);
 
 // CORS setup
 app.use(cors({
@@ -42,11 +42,13 @@ app.use((req, res, next) => {
 });
 
 app.use(cookieParser());
+app.use(express.json());
+
 
 app.listen(3000, () => {
   console.log("Server is running on port 3000!!!");
 });
-
+app.use('/api/payment/stripe-webhook', stripeRawBodyMiddleware);
 // Routes for user, authentication, cart, payment, and orders
 app.use("/api/user", userRoutes);
 app.use("/api/auth", authRoutes);
