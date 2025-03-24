@@ -28,7 +28,7 @@ const TrackOrderPage = () => {
 
   return (
     <div style={{ padding: '20px', backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
-      <Card title={`Tracking Status for Order ID: ${orderId}`} style={{ marginBottom: 20 }}>
+      <Card title={<span style={{ fontSize: '44px' }}>Track Your Package</span>} style={{ marginBottom: 40 }} >
         <Title level={4}>Order Tracking Timeline</Title>
         <Timeline mode="horizontal">
           {orderStatus.map((item, index) => (
