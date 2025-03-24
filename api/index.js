@@ -10,7 +10,7 @@ import cookieParser from 'cookie-parser';
 import admin from "./config/firebase.js";
 import cors from 'cors';
 import { stripeRawBodyMiddleware } from './middleware/stripeRawBoady.js';
-
+import bodyParser from 'body-parser';
 dotenv.config();
 
 mongoose
@@ -24,10 +24,6 @@ mongoose
 
   
 const app = express();
-
-// Use the raw body middleware for the Stripe webhook route
-//app.use(stripeRawBodyMiddleware);
-
 // CORS setup
 app.use(cors({
   origin: process.env.CLIENT_URL, // Use environment variable for frontend URL
@@ -40,15 +36,11 @@ app.use((req, res, next) => {
   res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
   next();
 });
-
+app.post('/api/payment/stripe-webhook', bodyParser.raw({ type: 'application/json' }));
 app.use(cookieParser());
 app.use(express.json());
 
 
-app.listen(3000, () => {
-  console.log("Server is running on port 3000!!!");
-});
-app.use('/api/payment/stripe-webhook', stripeRawBodyMiddleware);
 // Routes for user, authentication, cart, payment, and orders
 app.use("/api/user", userRoutes);
 app.use("/api/auth", authRoutes);
@@ -65,4 +57,7 @@ app.use((err, req, res, next) => {
     statusCode,
     message,
   });
+});
+app.listen(3000, () => {
+  console.log("Server is running on port 3000!!!");
 });

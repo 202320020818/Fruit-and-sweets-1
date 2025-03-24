@@ -25,7 +25,7 @@ export default function CartPage() {
           const data = await response.json();
 
           if (response.ok) {
-            setCartItems(data.data);
+            setCartItems(data.data); // Assuming 'data' contains an array of cart items
           } else {
             console.error("Error fetching cart items:", data.message);
           }
@@ -100,7 +100,7 @@ export default function CartPage() {
         setCartItems([]);  // Clear the cart after successful checkout session creation
         
         const { error } = await stripe.redirectToCheckout({ sessionId: session.id });
-
+        
         if (!error) {
           // Confirm payment in backend
           const paymentConfirmationResponse = await fetch("/api/payment/confirm-payment", {
@@ -130,6 +130,8 @@ export default function CartPage() {
       alert("An error occurred while processing the payment");
     }
   };
+
+  const totalAmount = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
 
   return (
     <div style={{ padding: "20px", backgroundColor: "#f5f5f5", minHeight: "100vh" }}>
@@ -189,28 +191,44 @@ export default function CartPage() {
             />
           </Card>
           <Card style={{ marginTop: 16 }}>
-            <Title level={5}>Expected shipping delivery</Title>
-            <Text>12.10.2020 - 14.10.2020</Text>
+            {cartItems.length === 0 ? (
+              <Text type="danger">No items available in your cart</Text>
+            ) : (
+              <>
+                <Title level={5}>Expected shipping delivery</Title>
+                <Text>12.10.2020 - 14.10.2020</Text>
+              </>
+            )}
           </Card>
         </Col>
 
         <Col md={8}>
           <Card title="Summary">
-            <List>
-              <List.Item>
-                <Text>Products</Text>
-                <Text>${cartItems.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2)}</Text>
-              </List.Item>
-              <List.Item>
-                <Text>Shipping</Text>
-                <Text>Gratis</Text>
-              </List.Item>
-              <List.Item>
-                <Text strong>Total (including VAT)</Text>
-                <Text strong>${cartItems.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2)}</Text>
-              </List.Item>
-            </List>
-            <Button type="primary" block style={{ marginTop: 16 }} onClick={handleCheckout}>
+            {cartItems.length > 0 ? (
+              <List>
+                <List.Item>
+                  <Text>Products</Text>
+                  <Text>${totalAmount.toFixed(2)}</Text>
+                </List.Item>
+                <List.Item>
+                  <Text>Shipping</Text>
+                  <Text>Gratis</Text>
+                </List.Item>
+                <List.Item>
+                  <Text strong>Total (including VAT)</Text>
+                  <Text strong>${totalAmount.toFixed(2)}</Text>
+                </List.Item>
+              </List>
+            ) : (
+              <Text type="primary">No items in cart to checkout</Text>
+            )}
+            <Button
+              type="primary"
+              block
+              style={{ marginTop: 16 }}
+              onClick={handleCheckout}
+              disabled={cartItems.length === 0} // Disable checkout button if no items
+            >
               Go to checkout
             </Button>
           </Card>
