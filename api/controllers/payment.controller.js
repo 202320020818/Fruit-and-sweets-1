@@ -1,19 +1,20 @@
-import { v4 as uuidv4 } from 'uuid'; // Import uuid package
+import { v4 as uuidv4 } from 'uuid';
 import CartItem from "../models/CartItemSchema.js";
 import Order from "../models/order.model.js"; // Import Order schema
 import Stripe from 'stripe';
-const stripe = Stripe("sk_test_51R1EIIDWYegqaTAkSR8SSLTlROdixGUzqEpC8eeMTe3ce8ALYEqNqOxkzgGEhI0kEqqy4XL9VU9hy8BRkSbMSII300aF88jnvy"); // Store secret key in env vars
+const stripe = Stripe("sk_test_51R1EIIDWYegqaTAkSR8SSLTlROdixGUzqEpC8eeMTe3ce8ALYEqNqOxkzgGEhI0kEqqy4XL9VU9hy8BRkSbMSII300aF88jnvy"); // Use the environment variable for the secret key
 
 // Add item to the cart
 export const addToCart = async (req, res) => {
   const { userId, itemName, price, image, createdBy, updatedBy, description, category, quantity = 1 } = req.body;
   const itemId = uuidv4(); // Generate a unique identifier for the cart item
+
   try {
     // Create a new cart item instance
     const newCartItem = new CartItem({
-      userId, // Associate cart item with user
-      itemId, // Assign unique item ID
-      name: itemName, // Item name
+      userId,
+      itemId,
+      name: itemName,
       price,
       image,
       createdBy,
@@ -22,8 +23,10 @@ export const addToCart = async (req, res) => {
       category,
       quantity,
     });
+
     // Save the item in the database
     await newCartItem.save();
+
     // Respond with success message
     return res.status(201).json({
       success: true,
@@ -32,11 +35,10 @@ export const addToCart = async (req, res) => {
     });
   } catch (error) {
     console.error("Error adding item to cart:", error);
-    // Return error response
     return res.status(500).json({
       success: false,
       message: "Error adding item to cart",
-      error: error.message 
+      error: error.message
     });
   }
 };
@@ -44,104 +46,90 @@ export const addToCart = async (req, res) => {
 // Get all cart items
 export const getCartItems = async (req, res) => {
   const { userId } = req.params;
-  
+
   try {
-    // Fetch cart items for the given user ID
     const cartItems = await CartItem.find({ userId });
-    
+
     if (!cartItems || cartItems.length === 0) {
-      console.log("No cart items found for userId:", userId);
       return res.status(404).json({ message: "No items found in the cart for this user." });
     }
-    
-    console.log("Cart items found:", cartItems);
-    
+
     res.status(200).json({ message: "Cart items retrieved successfully", data: cartItems });
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Error fetching cart items:", error);
     res.status(500).json({ message: "Error fetching cart items", error: error.message });
   }
 };
 
-// Create Payment Intent
-export const createPaymentIntent = async (req, res) => {
+// Create a Checkout Session
+export const createCheckoutSession = async (req, res) => {
   try {
-    const { cartItems } = req.body;
-    // Validate cart items array
-    if (!Array.isArray(cartItems) || cartItems.length === 0) {
-      return res.status(400).json({ message: "Invalid cart items" });
-    }
-    // Calculate total amount
-    const totalAmount = cartItems.reduce((total, item) => {
-      if (item.price) {
-        return total + item.price;
-      } else {
-        throw new Error("Item does not have a price");
-      }
-    }, 0);
-    // Create a payment intent with Stripe
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: totalAmount * 100, // Stripe requires amount in cents
-      currency: 'lkr', // Define the currency
+    const { items, totalAmount, userId } = req.body;
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: items.map(item => ({
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: item.name,
+            images: [item.image],
+            metadata: { itemId: item.itemId },
+          },
+          unit_amount: Math.round(item.price * 100), // Convert price to cents
+        },
+        quantity: item.quantity,
+      })),
+      mode: 'payment',
+      success_url: `${process.env.CLIENT_URL}/payment-success`,
+      cancel_url: `${process.env.CLIENT_URL}/cart`,
+      metadata: {
+        userId,
+        items: JSON.stringify(items),
+      },
     });
-    // Send client secret for frontend confirmation
-    res.status(200).json({ clientSecret: paymentIntent.client_secret });
+
+    res.status(200).json({ id: session.id });
   } catch (error) {
-    console.error("Error creating payment intent:", error);
-    res.status(500).json({ message: "Error creating payment intent", error: error.message });
+    console.error("Error creating checkout session:", error);
+    res.status(500).json({ message: 'Failed to create checkout session' });
   }
 };
 
-// Confirm Payment and Create Order
-export const confirmPayment = async (req, res) => {
-  const { paymentToken, userId, cartItems } = req.body;
+// Handle Webhook from Stripe
+export const handleStripeWebhook = async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  let event;
+
   try {
-    // Compute total order amount
-    const totalAmount = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
-    // Confirm the payment with Stripe
-    const paymentIntent = await stripe.paymentIntents.confirm(paymentToken, {
-      amount: totalAmount * 100, // Convert to cents
-    });
-    if (paymentIntent.status === 'succeeded') {
-      // Generate unique order ID
-      const orderId = uuidv4();
-      
-      // Create a new order entry
+    event = stripe.webhooks.constructEvent(req.body, sig, "whsec_ca13880a8c9c87b4fecd08086e9946c51995485233473c0ccf73ae2bf44c0605");
+  } catch (err) {
+    console.error('Webhook signature verification failed:', err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  // Handle the successful payment event
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    const userId = session.metadata.userId;
+    const items = JSON.parse(session.metadata.items);
+
+    try {
       const newOrder = new Order({
-        orderId,
         userId,
-        items: cartItems.map(item => ({
-          itemId: item._id,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-        })),
-        paymentToken: paymentIntent.id,
-        totalAmount,
-        status: 'completed',
+        items,
+        paymentStatus: session.payment_status,
+        totalAmount: session.amount_total / 100, // Convert amount back to dollars
+        paymentIntentId: session.payment_intent,
         createdAt: new Date(),
       });
-      // Save order in the database
+
       await newOrder.save();
-      // Clear user's cart after successful order placement
-      await CartItem.deleteMany({ userId });
-      return res.status(200).json({
-        success: true,
-        message: 'Payment successful, order placed successfully',
-        order: newOrder,
-      });
-    } else {
-      return res.status(400).json({
-        success: false,
-        message: 'Payment failed. Please try again.',
-      });
+      console.log('✅ Order saved successfully');
+    } catch (error) {
+      console.error('❌ Error saving order:', error);
     }
-  } catch (error) {
-    console.error("Error confirming payment:", error);
-    return res.status(500).json({
-      success: false,
-      message: 'Error confirming payment',
-      error: error.message,
-    });
   }
+
+  res.json({ received: true });
 };

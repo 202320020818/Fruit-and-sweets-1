@@ -1,20 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { Card, Row, Col, Button, InputNumber, Typography, Tooltip, List, Image } from "antd";
 import { MinusOutlined, PlusOutlined, DeleteOutlined, HeartOutlined } from "@ant-design/icons";
-import { useSelector } from "react-redux"; 
-import { loadStripe } from "@stripe/stripe-js"; 
-import { useNavigate } from "react-router-dom"; 
+import { useSelector } from "react-redux";
+import { loadStripe } from "@stripe/stripe-js";
+import { useNavigate } from "react-router-dom";
 
 const { Title, Text } = Typography;
 
 const stripePromise = loadStripe("pk_test_51R1EIIDWYegqaTAkzg9ID8J9AvbcIW7Aq28MPvbwFRqlajzS5FWLldM4XGFW4Xp5NO2sGpGZWXow3ejmHIXChlkC00Dw1heT33");
 
 export default function CartPage() {
-  const currentUser = useSelector((state) => state.user.currentUser); 
-  const userId = currentUser?._id; 
-  const navigate = useNavigate(); 
+  const currentUser = useSelector((state) => state.user.currentUser);
+  const userId = currentUser?._id;
+  const navigate = useNavigate();
 
-  const [cartItems, setCartItems] = useState([]); 
+  const [cartItems, setCartItems] = useState([]);
 
   // Fetch cart items when component mounts
   useEffect(() => {
@@ -25,7 +25,7 @@ export default function CartPage() {
           const data = await response.json();
 
           if (response.ok) {
-            setCartItems(data.data); 
+            setCartItems(data.data);
           } else {
             console.error("Error fetching cart items:", data.message);
           }
@@ -39,27 +39,27 @@ export default function CartPage() {
   }, [userId]);
 
   // Handle quantity update
-const handleQuantityChange = async (itemId, quantity) => {
-  try {
-    const updatedCartItems = cartItems.map((item) =>
-      item.itemId === itemId ? { ...item, quantity } : item
-    );
-    setCartItems(updatedCartItems);
+  const handleQuantityChange = async (itemId, quantity) => {
+    try {
+      const updatedCartItems = cartItems.map((item) =>
+        item.itemId === itemId ? { ...item, quantity } : item
+      );
+      setCartItems(updatedCartItems);
 
-    // Update in backend
-    const response = await fetch(`/api/cart/item/${itemId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ quantity }),
-    });
+      // Update in backend
+      const response = await fetch(`/api/cart/item/${itemId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quantity }),
+      });
 
-    if (!response.ok) {
-      throw new Error('Failed to update quantity');
+      if (!response.ok) {
+        throw new Error('Failed to update quantity');
+      }
+    } catch (error) {
+      console.error('Error updating item quantity:', error);
     }
-  } catch (error) {
-    console.error('Error updating item quantity:', error);
-  }
-};
+  };
 
   // Handle item deletion
   const handleDelete = async (itemId) => {
@@ -97,8 +97,8 @@ const handleQuantityChange = async (itemId, quantity) => {
       const session = await response.json();
 
       if (session.id) {
-        setCartItems([]);  
-
+        setCartItems([]);  // Clear the cart after successful checkout session creation
+        
         const { error } = await stripe.redirectToCheckout({ sessionId: session.id });
 
         if (!error) {
@@ -155,7 +155,7 @@ const handleQuantityChange = async (itemId, quantity) => {
                           type="text"
                           danger
                           icon={<DeleteOutlined />}
-                          onClick={() => handleDelete(item.itemId)} 
+                          onClick={() => handleDelete(item.itemId)}
                         />
                       </Tooltip>
                       <Tooltip title="Move to wishlist">
@@ -167,17 +167,17 @@ const handleQuantityChange = async (itemId, quantity) => {
                         min={1}
                         value={item.quantity}
                         style={{ width: "60px" }}
-                        onChange={(value) => handleQuantityChange(item.itemId, value)} 
+                        onChange={(value) => handleQuantityChange(item.itemId, value)}
                       />
                       <Button
                         icon={<MinusOutlined />}
                         style={{ marginLeft: "5px" }}
-                        onClick={() => handleQuantityChange(item.itemId, Math.max(item.quantity - 1, 1))} 
+                        onClick={() => handleQuantityChange(item.itemId, Math.max(item.quantity - 1, 1))}
                       />
                       <Button
                         icon={<PlusOutlined />}
                         style={{ marginLeft: "5px" }}
-                        onClick={() => handleQuantityChange(item.itemId, item.quantity + 1)} 
+                        onClick={() => handleQuantityChange(item.itemId, item.quantity + 1)}
                       />
                     </Col>
                     <Col span={4}>
