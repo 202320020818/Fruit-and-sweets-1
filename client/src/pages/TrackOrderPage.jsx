@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom'; // For extracting dynamic parameters from the URL
-import { Timeline, Card, Typography } from 'antd'; // Import Ant Design components
+import { Steps, Card, Typography } from 'antd'; // Import Ant Design components
 import { CheckCircleOutlined } from '@ant-design/icons'; // Import check mark icon
 
 const { Title } = Typography;
@@ -26,47 +26,26 @@ const TrackOrderPage = () => {
     fetchOrderTracking(); // Call the tracking fetch function
   }, [orderId]);
 
+  // Map over the orderStatus array to create the steps
+  const steps = orderStatus.map((status, index) => ({
+    title: status.status,
+    description: status.timestamp,
+    icon: status.isCompleted ? <CheckCircleOutlined style={{ color: 'green' }} /> : null, // Add check mark for completed status
+    status: status.isCompleted ? 'finish' : 'process', // Mark as completed if isCompleted is true
+
+  }));
+
   return (
-    <div style={{ padding: '20px', backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
-      <Card title={<span style={{ fontSize: '44px' }}>Track Your Package</span>} style={{ marginBottom: 40 }} >
-        <Title level={4}>Order Tracking Timeline</Title>
-        <Timeline mode="horizontal">
-          {orderStatus.map((item, index) => (
-            <Timeline.Item
-              key={index}
-              color={item.isCompleted ? 'green' : item.color}
-              dot={
-                item.isCompleted ? (
-                  <div
-                    style={{
-                      width: 20,
-                      height: 20,
-                      backgroundColor: 'green',
-                      borderRadius: '50%',
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <CheckCircleOutlined style={{ color: 'white', fontSize: 16 }} />
-                  </div>
-                ) : (
-                  <div
-                    style={{
-                      width: 16,
-                      height: 16,
-                      backgroundColor: item.color,
-                      borderRadius: '50%',
-                    }}
-                  />
-                )
-              }
-            >
-              <p>{item.status}</p>
-              <small>{item.timestamp}</small>
-            </Timeline.Item>
-          ))}
-        </Timeline>
+    <div style={{  padding: '60px', backgroundColor: '#f5f5f5', minHeight: '50vh' }}>
+      <Card title={<span style={{ fontSize: '44px',marginTop:'20px' }}>Track Your Package<br/>
+      <div style={{fontSize:'20px'}}>Order # <span style={{fontSize:'18px',color:'grey'}}>{orderId}</span></div> </span>} style={{ marginBottom: 40 }} >
+        <Title style={{marginBottom:60}}level={4}>Order Tracking Timeline</Title>
+        <Steps
+        style={{marginBottom:80}}
+          current={orderStatus.length - 1} // Set the current step to the last one (the most recent)
+          items={steps}
+          size="larger" // You can change this if you need larger or smaller steps
+        />
       </Card>
     </div>
   );
