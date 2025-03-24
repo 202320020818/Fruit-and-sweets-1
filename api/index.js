@@ -22,9 +22,6 @@ mongoose
 
 const app = express();
 
-
-
-
 app.use(cors({
   origin: 'http://localhost:5173',  // replace with your frontend URL
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
