@@ -61,7 +61,8 @@ export const getCartItems = async (req, res) => {
   }
 };
 
-// Create a Checkout Session
+const exchangeRateLKRtoUSD = 0.0026; // Replace with actual exchange rate from LKR to USD
+
 export const createCheckoutSession = async (req, res) => {
   try {
     const { items, totalAmount, userId } = req.body;
@@ -73,44 +74,57 @@ export const createCheckoutSession = async (req, res) => {
       });
     }
 
-    // Calculate the total amount in USD (make sure the totalAmount is in USD)
-    const totalAmountInCents = Math.round(totalAmount * 100); // Convert to cents
-    
-    // Check if the total amount is at least 50 cents
-    if (totalAmountInCents < 50) {
+    // Log the incoming total amount
+    console.log("Total amount in LKR (before conversion):", totalAmount);
+
+    // Calculate the total amount in cents (ensure this is in LKR first)
+    const totalAmountInLKR = Math.round(totalAmount * 100); // Convert to LKR cents
+    const totalAmountInUSD = totalAmount * exchangeRateLKRtoUSD; // Convert to USD
+    const totalAmountInUSDInCents = Math.round(totalAmountInUSD * 100); // Convert to USD cents
+
+    // Log the conversion details
+    console.log("Total amount in USD (after conversion):", totalAmountInUSD);
+    console.log("Total amount in USD cents (after conversion):", totalAmountInUSDInCents);
+
+    // Check if the total amount is at least 50 cents in USD
+    if (totalAmountInUSDInCents < 50) {
       return res.status(400).json({
-        message: "The total amount must be at least 50 cents.",
+        message: "The total amount must be at least 50 cents in USD.",
       });
     }
 
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: items.map(item => ({
+      payment_method_types: ["card"],
+      submit_type: 'pay',
+      mode: "payment",
+      billing_address_collection: 'auto',
+      line_items: items.map((item) => ({
         price_data: {
-          currency: 'lkr', // Ensure currency is set to 'usd' or another valid currency
+          currency: "lkr", // Specify currency, change as needed
           product_data: {
             name: item.name,
-            metadata: { itemId: item.itemId },
+            //TODO add image here
+            metadata: {
+              userId: userId,
+            },
           },
-          unit_amount: Math.round(item.price * 100), // Convert price to cents
+          unit_amount: Math.round(item.price * 100), 
         },
+        adjustable_quantity: { enabled: true, minimum: 1 },
         quantity: item.quantity,
       })),
-      mode: 'payment',
-      success_url: "http://localhost:5173/payment-success",
-      cancel_url: "http://localhost:5173/cancel",
-      metadata: {
-        userId,
-        items: JSON.stringify(items),
-      },
+      success_url: "http://localhost:5173/payment-success",  // Redirect after successful payment
+      cancel_url: "http://localhost:5173/payment-failed",    // Redirect if payment is canceled
     });
 
-    res.status(200).json({ id: session.id });
+    res.json({ id: session.id });
   } catch (error) {
-    console.error("Error creating checkout session:", error);
-    res.status(500).json({ message: 'Failed to create checkout session' });
+    console.error(error);
+    res.status(500).json({ message: "Error creating checkout session" });
   }
 };
+
+
 
 
 
