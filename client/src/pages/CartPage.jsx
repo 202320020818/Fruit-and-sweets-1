@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import styles from '../Style.module.css'
 
 const { Title, Text } = Typography;
-const stripePromise = loadStripe("your-stripe-public-key");
+const stripePromise = loadStripe("sk_test_51R1EIIDWYegqaTAkSR8SSLTlROdixGUzqEpC8eeMTe3ce8ALYEqNqOxkzgGEhI0kEqqy4XL9VU9hy8BRkSbMSII300aF88jnvy");
 const { RangePicker } = DatePicker;
 
 export default function CartPage() {
@@ -35,11 +35,12 @@ export default function CartPage() {
   }, [userId]);
 
   const handleCheckout = async () => {
+    const orderDetails = {
+      items: cartItems,
+      totalAmount: cartItems.reduce((total, item) => total + item.price * item.quantity, 0),
+    };
     try {
-      const orderDetails = {
-        items: cartItems,
-        totalAmount: cartItems.reduce((total, item) => total + item.price * item.quantity, 0),
-      };
+     
       // Validate the form fields before proceeding
       await form.validateFields();
   
@@ -60,13 +61,12 @@ export default function CartPage() {
       }
   
       if(saveResponse.ok){
-
-       
+        console.log("triggrtr")
       const stripe = await stripePromise;
       const session = await fetch("/api/payment/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: cartItems }),
+        body: JSON.stringify(orderDetails),
       }).then((res) => res.json());
   
       if (session.id) {
