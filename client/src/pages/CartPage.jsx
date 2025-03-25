@@ -1,13 +1,14 @@
 import React, { useEffect, useState, useRef } from "react";
-import { message,Card, Row, Col, Button, Form, Typography, DatePicker, Select, Input, List, Image } from "antd";
+import { message,Card, Row, Col, Button, Form, InputNumber,Typography, Tooltip, Select, Input, List, Image } from "antd";
+import { DeleteOutlined,HeartOutlined,MinusOutlined,PlusOutlined} from "@ant-design/icons";
 import { useSelector } from "react-redux";
 import { loadStripe } from "@stripe/stripe-js";
 import { useNavigate } from "react-router-dom";
 import styles from '../Style.module.css'
 
 const { Title, Text } = Typography;
-const stripePromise = loadStripe("sk_test_51R1EIIDWYegqaTAkSR8SSLTlROdixGUzqEpC8eeMTe3ce8ALYEqNqOxkzgGEhI0kEqqy4XL9VU9hy8BRkSbMSII300aF88jnvy");
-const { RangePicker } = DatePicker;
+const stripePromise = loadStripe("pk_test_51R1EIIDWYegqaTAkzg9ID8J9AvbcIW7Aq28MPvbwFRqlajzS5FWLldM4XGFW4Xp5NO2sGpGZWXow3ejmHIXChlkC00Dw1heT33");
+
 
 export default function CartPage() {
   const currentUser = useSelector((state) => state.user.currentUser);
@@ -34,20 +35,53 @@ export default function CartPage() {
     }
   }, [userId]);
 
-  const handleCheckout = async () => {
-    const orderDetails = {
-      items: cartItems,
-      totalAmount: cartItems.reduce((total, item) => total + item.price * item.quantity, 0),
-    };
+
+  const handleQuantityChange = async (itemId, quantity) => {
     try {
-     
-      // Validate the form fields before proceeding
+      const updatedCartItems = cartItems.map((item) =>
+        item.itemId === itemId ? { ...item, quantity } : item
+      );
+      setCartItems(updatedCartItems);
+  
+      // Update in backend
+      const response = await fetch(`/api/cart/item/${itemId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quantity }),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to update quantity');
+      }
+    } catch (error) {
+      console.error('Error updating item quantity:', error);
+    }
+  };
+  
+    // Handle item deletion
+    const handleDelete = async (itemId) => {
+      try {
+        const response = await fetch(`/api/cart/item/${userId}/${itemId}`, { method: 'DELETE' });
+  
+        const data = await response.json();
+  
+        if (response.ok) {
+          setCartItems((prevItems) => prevItems.filter((item) => item.itemId !== itemId));
+        } else {
+          alert(data.message || "Error deleting item");
+        }
+      } catch (error) {
+        console.error("Error deleting item:", error);
+      }
+    };
+  
+
+  const handleCheckout = async () => {
+  
+  try {
+    
       await form.validateFields();
-  
-      // Get form data
       const formData = form.getFieldsValue();
-  
-      // Save delivery details
       const saveResponse = await fetch("/api/delivery/saveDeliveryDetails", {
         method: "POST",
         headers: {
@@ -61,25 +95,62 @@ export default function CartPage() {
       }
   
       if(saveResponse.ok){
-        console.log("triggrtr")
-      const stripe = await stripePromise;
-      const session = await fetch("/api/payment/create-checkout-session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(orderDetails),
-      }).then((res) => res.json());
-  
-      if (session.id) {
-        await stripe.redirectToCheckout({ sessionId: session.id });
-      }
+        
+        const stripe = await stripePromise;
+
+        const orderDetails = {
+          items: cartItems,
+          totalAmount: cartItems.reduce((total, item) => total + item.price * item.quantity, 0),
+        };
+    
+        try {
+          const response = await fetch("/api/payment/create-checkout-session", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(orderDetails),
+          });
+    
+          const session = await response.json();
+    
+          if (session.id) {
+            setCartItems([]);  
+    
+            const { error } = await stripe.redirectToCheckout({ sessionId: session.id });
+    
+            if (!error) {
+              // Confirm payment in backend
+              const paymentConfirmationResponse = await fetch("/api/payment/confirm-payment", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  paymentToken: session.id, 
+                  userId: userId, 
+                  cartItems: cartItems,
+                }),
+              });
+    
+              const confirmationResult = await paymentConfirmationResponse.json();
+    
+              if (confirmationResult.success) {
+                localStorage.setItem("orderId", confirmationResult.orderId); 
+                navigate("/payment-success");
+              } else {
+                alert("Payment confirmation failed, please try again.");
+              }
+            }
+          } else {
+            alert("Failed to create checkout session.");
+          }
+        } catch (error) {
+          console.error("Error initiating checkout:", error);
+          alert("An error occurred while processing the payment");
+        }
     }
     } catch (error) {
       console.error("Checkout Error:", error);
   
-      // Show a more specific error message
       message.error(error.message || "Please fill all required fields before proceeding!");
   
-      // Scroll to form if validation failed
       if (formRef.current) {
         formRef.current.scrollIntoView({ behavior: "smooth" });
       }
@@ -102,15 +173,54 @@ export default function CartPage() {
     <div style={{ padding: "20px", backgroundColor: "#f5f5f5", minHeight: "100vh" }}>
       <Row gutter={16} justify="center">
         <Col md={16}>
-          <Card title={`Cart - ${cartItems.length} items`}>
+        <Card title={`Cart - ${cartItems.length} items`}>
             <List
               dataSource={cartItems}
               renderItem={(item) => (
                 <List.Item>
                   <Row gutter={16} align="middle" style={{ width: "100%" }}>
-                    <Col span={4}><Image src={item.image} width={100} /></Col>
-                    <Col span={10}><Title level={5}>{item.name}</Title></Col>
-                    <Col span={6}><Text strong>${item.price.toFixed(2)}</Text></Col>
+                    <Col span={4}>
+                      <Image src={item.image} width={100} />
+                    </Col>
+                    <Col span={10}>
+                      <Title level={5}>{item.name}</Title>
+                      <Text>Color: {item.color}</Text>
+                      <br />
+                      <Text>Size: {item.size}</Text>
+                      <br />
+                      <Tooltip title="Remove item">
+                        <Button
+                          type="text"
+                          danger
+                          icon={<DeleteOutlined />}
+                          onClick={() => handleDelete(item.itemId)} 
+                        />
+                      </Tooltip>
+                      <Tooltip title="Move to wishlist">
+                        <Button type="text" icon={<HeartOutlined />} />
+                      </Tooltip>
+                    </Col>
+                    <Col span={6}>
+                      <InputNumber
+                        min={1}
+                        value={item.quantity}
+                        style={{ width: "60px" }}
+                        onChange={(value) => handleQuantityChange(item.itemId, value)} 
+                      />
+                      <Button
+                        icon={<MinusOutlined />}
+                        style={{ marginLeft: "5px" }}
+                        onClick={() => handleQuantityChange(item.itemId, Math.max(item.quantity - 1, 1))} 
+                      />
+                      <Button
+                        icon={<PlusOutlined />}
+                        style={{ marginLeft: "5px" }}
+                        onClick={() => handleQuantityChange(item.itemId, item.quantity + 1)} 
+                      />
+                    </Col>
+                    <Col span={4}>
+                      <Text strong>${(item.price * item.quantity).toFixed(2)}</Text>
+                    </Col>
                   </Row>
                 </List.Item>
               )}
