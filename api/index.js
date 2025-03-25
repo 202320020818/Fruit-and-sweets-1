@@ -10,7 +10,14 @@ import cookieParser from 'cookie-parser';
 import admin from "./config/firebase.js";
 import cors from 'cors';
 import { stripeRawBodyMiddleware } from './middleware/stripeRawBoady.js';
+
 import bodyParser from 'body-parser';
+import deliveryRoutes from "./routes/delivery.route.js"; 
+
+
+console.log("Delivery routes loaded");
+
+
 dotenv.config();
 
 mongoose
@@ -36,15 +43,27 @@ app.use((req, res, next) => {
   next();
 });
 app.post('/api/payment/stripe-webhook', bodyParser.raw({ type: 'application/json' }));
-app.use(cookieParser());
+
 app.use(express.json());
+app.use(cookieParser());
 
 
+
+// Routes for user, authentication, cart, payment, and orders,delivery
 app.use("/api/user", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/payment', paymentRoutes); 
 app.use('/api/order', orderRoutes); 
+app.use('/api/delivery', deliveryRoutes);// Order routes (e.g., fetching order details)
+
+console.log("✅ Registering delivery routes...");
+app.use("/api/delivery", deliveryRoutes);
+console.log("✅ Delivery routes mounted correctly!");
+
+app.listen(3000, () => {
+  console.log("Server is running on port 3000!!!");
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -56,8 +75,4 @@ app.use((err, req, res, next) => {
     message,
   });
 });
-app.listen(3000, () => {
-  console.log("Server is running on port 3000!!!");
-});
 
-    

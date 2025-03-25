@@ -28,8 +28,6 @@ export const addToCart = async (req, res) => {
   }
 };
 
-
-// Get all cart items
 export const getCartItems = async (req, res) => {
   const { userId } = req.params;
   try {

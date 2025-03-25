@@ -7,6 +7,7 @@ import {
   HiAnnotation,
   HiChartPie,
 } from 'react-icons/hi';
+import { FaTruck } from 'react-icons/fa';
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { signoutSuccess } from '../redux/user/userSlice';
@@ -89,6 +90,7 @@ export default function DashSidebar() {
                   Users
                 </Sidebar.Item>
               </Link>
+              
               <Link to='/dashboard?tab=comments'>
                 <Sidebar.Item
                   active={tab === 'comments'}
@@ -96,6 +98,12 @@ export default function DashSidebar() {
                   as='div'
                 >
                   Comments
+                </Sidebar.Item>
+              </Link>
+
+              <Link to='/dashboard?tab=delivery-details'>
+                <Sidebar.Item active={tab === 'delivery-details'} icon={FaTruck} as='div'>
+                   Deliveries
                 </Sidebar.Item>
               </Link>
             </>
