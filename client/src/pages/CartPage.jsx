@@ -36,6 +36,10 @@ export default function CartPage() {
 
   const handleCheckout = async () => {
     try {
+      const orderDetails = {
+        items: cartItems,
+        totalAmount: cartItems.reduce((total, item) => total + item.price * item.quantity, 0),
+      };
       // Validate the form fields before proceeding
       await form.validateFields();
   
@@ -56,6 +60,8 @@ export default function CartPage() {
       }
   
       if(saveResponse.ok){
+
+       
       const stripe = await stripePromise;
       const session = await fetch("/api/payment/create-checkout-session", {
         method: "POST",
