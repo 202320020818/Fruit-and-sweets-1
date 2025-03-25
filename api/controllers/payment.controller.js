@@ -60,13 +60,13 @@ export const getCartItems = async (req, res) => {
 
 export const createCheckoutSession = async (req, res) => {
   try {
-    const { items, totalAmount } = req.body;
+    const { items, totalAmount ,userDeliveryDetailsId } = req.body;
     if (!items || items.length === 0) {
       return res.status(400).json({ message: "No items found" });
     }
     const userId = items[0].userId;
     const orderId = uuidv4();
-
+   
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: items.map(item => ({
@@ -85,6 +85,7 @@ export const createCheckoutSession = async (req, res) => {
       metadata: {
         orderId,
         userId,
+        userDeliveryDetailsId
       },
     });
 
@@ -92,6 +93,7 @@ export const createCheckoutSession = async (req, res) => {
     const newOrder = new Order({
       orderId,
       userId,
+      userDeliveryDetailsId,
       items: items.map(item => ({
         name: item.name,
         price: item.price,

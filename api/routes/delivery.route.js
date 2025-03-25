@@ -3,7 +3,7 @@ import express from 'express';
 import{
     createDelivery,
     getAllDeliveries,
-    getDeliveryById, 
+    getDeliveryDetailsByUserId, 
     updateDelivery,
     deleteDelivery,
     getCancelledDeliveries
@@ -13,7 +13,7 @@ const router = express.Router();
 // Routes
 router.post("/saveDeliveryDetails", createDelivery);        // Create a delivery
 router.get("/", getAllDeliveries);       // Get all deliveries
-router.get("/:id", getDeliveryById);     // Get delivery by ID
+router.get("/getDeliveryDetailsByUser/:userId", getDeliveryDetailsByUserId);     // Get delivery by ID
 router.put("/:id", updateDelivery);      // Update delivery
 router.delete("/:id", deleteDelivery);   // Delete delivery
 router.get("/cancelled", getCancelledDeliveries);
