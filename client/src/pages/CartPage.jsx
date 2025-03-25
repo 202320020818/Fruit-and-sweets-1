@@ -25,7 +25,7 @@ export default function CartPage() {
           const data = await response.json();
 
           if (response.ok) {
-            setCartItems(data.data); // Assuming 'data' contains an array of cart items
+            setCartItems(data.data); 
           } else {
             console.error("Error fetching cart items:", data.message);
           }
@@ -97,12 +97,11 @@ export default function CartPage() {
       const session = await response.json();
 
       if (session.id) {
-        setCartItems([]);  // Clear the cart after successful checkout session creation
+        setCartItems([]);  
         
         const { error } = await stripe.redirectToCheckout({ sessionId: session.id });
         
         if (!error) {
-          // Confirm payment in backend
           const paymentConfirmationResponse = await fetch("/api/payment/confirm-payment", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -227,7 +226,7 @@ export default function CartPage() {
               block
               style={{ marginTop: 16 }}
               onClick={handleCheckout}
-              disabled={cartItems.length === 0} // Disable checkout button if no items
+              disabled={cartItems.length === 0} 
             >
               Go to checkout
             </Button>
