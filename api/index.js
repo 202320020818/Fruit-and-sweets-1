@@ -5,7 +5,7 @@ import userRoutes from "./routes/user.route.js";
 import authRoutes from "./routes/auth.route.js";
 import cartRoutes from "./routes/cart.route.js";
 import paymentRoutes from "./routes/payment.route.js";
-import orderRoutes from './routes/order.route.js'; // Import order routes
+import orderRoutes from './routes/order.route.js';  
 import cookieParser from 'cookie-parser';
 import admin from "./config/firebase.js";
 import cors from 'cors';
@@ -31,11 +31,10 @@ mongoose
 
   
 const app = express();
-// CORS setup
 app.use(cors({
-  origin: process.env.CLIENT_URL, // Use environment variable for frontend URL
+  origin: process.env.CLIENT_URL, 
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true,  // Allow credentials (cookies)
+  credentials: true,  
 }));
 
 // Middleware to set Cross-Origin-Opener-Policy header

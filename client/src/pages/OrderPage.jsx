@@ -1,18 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux'; // Import useSelector to get the userId
-import { Table, Card, Typography, Button, InputNumber, Collapse } from 'antd'; // Import Ant Design components
-import { EyeOutlined } from '@ant-design/icons'; // Import EyeOutlined icon for "Track Order"
-import { useNavigate } from 'react-router-dom'; // Import useNavigate hook
+import { useSelector } from 'react-redux';
+import { Table, Card, Typography, Button, InputNumber } from 'antd';
+import { EyeOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 
 const { Title } = Typography;
-const { Panel } = Collapse;
 
 export default function OrderPage() {
-  const currentUser = useSelector((state) => state.user.currentUser); // Get currentUser from Redux state
-  const userId = currentUser?._id; // Extract the userId from the logged-in user
-  const [orders, setOrders] = useState([]); // State to hold the list of orders
+  const currentUser = useSelector((state) => state.user.currentUser);
+  const userId = currentUser?._id;
+  const [orders, setOrders] = useState([]);
   const navigate = useNavigate();
-  
+
   // Fetch orders when component mounts or userId changes
   useEffect(() => {
     if (userId) {
@@ -21,7 +20,7 @@ export default function OrderPage() {
           const response = await fetch(`/api/order/completed-orders/${userId}`);
           const data = await response.json();
           if (response.ok) {
-            setOrders(data.data); // Update the orders state with the fetched data
+            setOrders(data.data);
           } else {
             console.error('Error fetching orders:', data.message);
           }
@@ -29,9 +28,9 @@ export default function OrderPage() {
           console.error('Error:', error);
         }
       };
-      fetchOrders(); // Call the fetch function
+      fetchOrders();
     }
-  }, [userId]); // Depend on userId to refetch orders if the user changes
+  }, [userId]);
 
   // Calculate total price for each order
   const calculateOrderTotal = (items) => {
@@ -43,6 +42,33 @@ export default function OrderPage() {
     console.log('Tracking order:', orderId);
     navigate(`/trackOrder/${orderId}`);
   };
+
+  // Define columns for the order table
+  const columns = [
+    {
+      title: 'Order ID',
+      dataIndex: 'orderId',
+      key: 'orderId',
+    },
+    {
+      title: 'Total Price',
+      key: 'totalPrice',
+      render: (text, record) => `Rs ${calculateOrderTotal(record.items)}`,
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      render: (text, record) => (
+        <Button
+          type="primary"
+          icon={<EyeOutlined />}
+          onClick={() => handleTrackOrderClick(record.orderId)} // Track order button click handler
+        >
+          Track Order
+        </Button>
+      ),
+    },
+  ];
 
   // Define columns for the items in each order
   const itemColumns = [
@@ -90,46 +116,23 @@ export default function OrderPage() {
   return (
     <div style={{ padding: '20px', backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
       <Card title={`My Orders - ${orders.length} orders`} style={{ marginBottom: 20 }}>
-        {orders.length > 0 ? (
-          <Collapse>
-            {orders.map((order) => (
-              <Panel
-                key={order.orderId}
-                header={
-                  <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-                    <div>
-                    <Title level={5} style={{ margin: 0 }}>
-  Order ID: <strong>{order.orderId}</strong>
-</Title>
-                    </div>
-                    <div>
-                      <Title level={5} style={{ margin: 0 }}>Total: Rs {calculateOrderTotal(order.items)}</Title>
-                    </div>
-                  </div>
-                }
-              >
-                <Table
-                  dataSource={order.items}
-                  columns={itemColumns}
-                  pagination={false}
-                  rowKey="_id"
-                  style={{ marginBottom: 20 }}
-                />
-                <div style={{ textAlign: 'right' }}>
-                  <Button
-                    type="primary"
-                    icon={<EyeOutlined />}
-                    onClick={() => handleTrackOrderClick(order.orderId)} // Track order button click handler
-                  >
-                    Track Order
-                  </Button>
-                </div>
-              </Panel>
-            ))}
-          </Collapse>
-        ) : (
-          <p>No completed orders found.</p>
-        )}
+        <Table
+          dataSource={orders}
+          columns={columns}
+          rowKey="orderId"
+          expandable={{
+            expandedRowRender: (record) => (
+              <Table
+                dataSource={record.items}
+                columns={itemColumns}
+                pagination={false}
+                rowKey="_id"
+              />
+            ),
+            rowExpandable: (record) => record.items.length > 0,
+          }}
+          pagination={false}
+        />
       </Card>
     </div>
   );

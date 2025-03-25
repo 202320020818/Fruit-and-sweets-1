@@ -32,7 +32,7 @@ export default function App() {
         <Route path="/products" element={<Products />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/payment-success" element={<PaymentSuccess />} />
-        <Route path="/myOrders" element={<OrderPage />} /> {/* Order page route */}
+        <Route path="/myOrders" element={<OrderPage />} /> 
         <Route path="/myOrders" element={<OrderPage />} />
         <Route path="/trackOrder/:orderId" element={<TrackOrderPage />} />
         <Route path="/orders/deliveryDetails" element={<DeliveryDetails />} />

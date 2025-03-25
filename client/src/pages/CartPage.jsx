@@ -32,6 +32,22 @@ export default function CartPage() {
        
         .catch((error) => console.error("Error fetching cart items:", error));
         console.log("Cart Items",cartItems)
+      const fetchCartItems = async () => {
+        try {
+          const response = await fetch(`/api/cart/items/${userId}`);
+          const data = await response.json();
+
+          if (response.ok) {
+            setCartItems(data.data); 
+          } else {
+            console.error("Error fetching cart items:", data.message);
+          }
+        } catch (error) {
+          console.error("Error:", error);
+        }
+      };
+
+      fetchCartItems();
     }
   }, [userId]);
 
@@ -77,9 +93,7 @@ export default function CartPage() {
   
 
   const handleCheckout = async () => {
-  
   try {
-    
       await form.validateFields();
       const formData = form.getFieldsValue();
       const saveResponse = await fetch("/api/delivery/saveDeliveryDetails", {
@@ -95,27 +109,25 @@ export default function CartPage() {
       }
   
       if(saveResponse.ok){
-        
         const stripe = await stripePromise;
-
         const orderDetails = {
           items: cartItems,
           totalAmount: cartItems.reduce((total, item) => total + item.price * item.quantity, 0),
         };
     
-        try {
-          const response = await fetch("/api/payment/create-checkout-session", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(orderDetails),
-          });
-    
-          const session = await response.json();
-    
-          if (session.id) {
-            setCartItems([]);  
-    
-            const { error } = await stripe.redirectToCheckout({ sessionId: session.id });
+        const response = await fetch("/api/payment/create-checkout-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(orderDetails),
+        });
+  
+        const session = await response.json();
+
+      if (session.id) {
+        setCartItems([]);  
+        
+        const { error } = await stripe.redirectToCheckout({ sessionId: session.id });
+      
     
             if (!error) {
               // Confirm payment in backend
@@ -141,10 +153,7 @@ export default function CartPage() {
           } else {
             alert("Failed to create checkout session.");
           }
-        } catch (error) {
-          console.error("Error initiating checkout:", error);
-          alert("An error occurred while processing the payment");
-        }
+        
     }
     } catch (error) {
       console.error("Checkout Error:", error);
@@ -156,7 +165,7 @@ export default function CartPage() {
       }
     }
   };
-
+  const totalAmount = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
   const variant = Form.useWatch("variant", form);
   const formItemLayout = {
     labelCol: {
@@ -173,7 +182,7 @@ export default function CartPage() {
     <div style={{ padding: "20px", backgroundColor: "#f5f5f5", minHeight: "100vh" }}>
       <Row gutter={16} justify="center">
         <Col md={16}>
-        <Card title={`Cart - ${cartItems.length} items`}>
+          <Card title={`Cart - ${cartItems.length} items`}>
             <List
               dataSource={cartItems}
               renderItem={(item) => (
@@ -193,7 +202,7 @@ export default function CartPage() {
                           type="text"
                           danger
                           icon={<DeleteOutlined />}
-                          onClick={() => handleDelete(item.itemId)} 
+                          onClick={() => handleDelete(item.itemId)}
                         />
                       </Tooltip>
                       <Tooltip title="Move to wishlist">
@@ -205,17 +214,17 @@ export default function CartPage() {
                         min={1}
                         value={item.quantity}
                         style={{ width: "60px" }}
-                        onChange={(value) => handleQuantityChange(item.itemId, value)} 
+                        onChange={(value) => handleQuantityChange(item.itemId, value)}
                       />
                       <Button
                         icon={<MinusOutlined />}
                         style={{ marginLeft: "5px" }}
-                        onClick={() => handleQuantityChange(item.itemId, Math.max(item.quantity - 1, 1))} 
+                        onClick={() => handleQuantityChange(item.itemId, Math.max(item.quantity - 1, 1))}
                       />
                       <Button
                         icon={<PlusOutlined />}
                         style={{ marginLeft: "5px" }}
-                        onClick={() => handleQuantityChange(item.itemId, item.quantity + 1)} 
+                        onClick={() => handleQuantityChange(item.itemId, item.quantity + 1)}
                       />
                     </Col>
                     <Col span={4}>
@@ -249,7 +258,7 @@ export default function CartPage() {
                       wrapperCol={{ span: 16 }}
                       rules={[{ required: true, message: "Please enter customer name!" }]}
                     >
-                      <Input className={styles['ant-input']}/>
+                      <Input className={styles["ant-input"]} />
                     </Form.Item>
                     <Form.Item
                       label="Mobile Number"
@@ -258,7 +267,7 @@ export default function CartPage() {
                       wrapperCol={{ span: 16 }}
                       rules={[{ required: true, message: "Please enter mobile number!" }]}
                     >
-                       <Input className={styles['ant-input']}/>
+                      <Input className={styles["ant-input"]} />
                     </Form.Item>
                     <Form.Item
                       label="Delivery Address"
@@ -269,15 +278,14 @@ export default function CartPage() {
                     >
                       <Input.TextArea />
                     </Form.Item>
-
                     <Form.Item
                       label="Postal Code"
                       name="postalCode"
                       labelCol={{ span: 7 }}
                       wrapperCol={{ span: 16 }}
-                      rules={[{ required: true, message: "please enter your postal code !" }]}
+                      rules={[{ required: true, message: "Please enter your postal code!" }]}
                     >
-                       <Input className={styles['ant-input']}/>
+                      <Input className={styles["ant-input"]} />
                     </Form.Item>
                   </Col>
 
@@ -295,15 +303,9 @@ export default function CartPage() {
                     </Form.Item>
 
                     <Form.Item
-                      label={
-                        <div style={{ whiteSpace: "pre-line" }}>
-                          Delivery
-                          {"\n"}
-                          Service
-                        </div>
-                      }
+                      label="Delivery Service"
                       name="deliveryService"
-                      rules={[{ required: true, message: "Slelect delivery service provider" }]}
+                      rules={[{ required: true, message: "Select delivery service provider" }]}
                     >
                       <Select placeholder="Select Delivery Service Provider">
                         <Select.Option value="uber">Uber</Select.Option>
@@ -318,14 +320,14 @@ export default function CartPage() {
                       name="email"
                       rules={[{ required: true, message: "Please enter your email!" }]}
                     >
-                       <Input className={styles['ant-input']}/>
+                      <Input className={styles["ant-input"]} />
                     </Form.Item>
                     <Form.Item
                       label="District"
                       name="district"
                       rules={[{ required: true, message: "Please input your district" }]}
                     >
-                       <Input className={styles['ant-input']}/>
+                      <Input className={styles["ant-input"]} />
                     </Form.Item>
                   </Col>
                 </Row>
@@ -339,7 +341,7 @@ export default function CartPage() {
             <List>
               <List.Item>
                 <Text>Products</Text>
-                <Text>${cartItems.reduce((total, item) => total + item.price, 0).toFixed(2)}</Text>
+                <Text>${totalAmount.toFixed(2)}</Text>
               </List.Item>
               <List.Item>
                 <Text>Shipping</Text>
@@ -347,10 +349,10 @@ export default function CartPage() {
               </List.Item>
               <List.Item>
                 <Text strong>Total (incl. VAT)</Text>
-                <Text strong>${cartItems.reduce((total, item) => total + item.price, 0).toFixed(2)}</Text>
+                <Text strong>${totalAmount.toFixed(2)}</Text>
               </List.Item>
             </List>
-            <Button type="primary" block style={{ marginTop: 16 }} onClick={handleCheckout}>
+            <Button type="primary" block style={{ marginTop: 16 }} onClick={handleCheckout} disabled={cartItems.length === 0}>
               Go to Checkout
             </Button>
           </Card>
