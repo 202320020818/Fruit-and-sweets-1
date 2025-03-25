@@ -13,7 +13,7 @@ export const createDelivery = async (req, res) => {
       deliveryType,
       deliveryService,
       district,
-
+      userId
     } = req.body;
 
     // // Validate required fields
@@ -23,6 +23,7 @@ export const createDelivery = async (req, res) => {
 
     const newDelivery = new Delivery({
       customerName,
+      userId,
       deliveryAddress,
       deliveryService,
       deliveryType,
@@ -52,25 +53,29 @@ export const getAllDeliveries = async (req, res) => {
 };
 
 // READ - Get a single delivery by ID
-export const getDeliveryById = async (req, res) => {
+export const getDeliveryDetailsByUserId = async (req, res) => {
+
+  const { userId } = req.params; 
   try {
-    let id = req.params.id.trim(); // Trim extra spaces or newline characters
-
-    // Validate MongoDB ObjectId format
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid delivery ID format!" });
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required!" });
     }
 
-    const delivery = await Delivery.findById(id);
-    if (!delivery) {
-      return res.status(404).json({ message: "Delivery not found!" });
+   
+
+    // Fetch all deliveries for the user
+    const deliveries = await Delivery.find({ userId });
+
+    if (!deliveries.length) {
+      return res.status(404).json({ message: "No deliveries found for this user!" });
     }
 
-    res.status(200).json(delivery);
+    res.status(200).json(deliveries);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching delivery!", error: error.message });
+    res.status(500).json({ message: "Error fetching delivery details!", error: error.message });
   }
 };
+
 
 // UPDATE - Modify an existing delivery
 export const updateDelivery = async (req, res) => {

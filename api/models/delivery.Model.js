@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const deliverySchema = new mongoose.Schema(
   {
-    orderId: { type: String, required: false },
+    userId:{ type: String, required: false },
     customerName: { type: String, required: false },
     phoneNo: { type: String, required: false }, // Mapping from mobileNumber
     email: { type: String, required: false },
@@ -44,5 +44,5 @@ deliverySchema.pre("save", function (next) {
   next();
 });
 
-const Delivery = mongoose.model("Delivery", deliverySchema);
+const Delivery = mongoose.model("DeliveryDetials", deliverySchema);
 export default Delivery;
