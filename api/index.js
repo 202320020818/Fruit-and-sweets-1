@@ -55,7 +55,8 @@ app.use("/api/user", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/payment', paymentRoutes); 
-app.use('/api/order', orderRoutes); // Order routes (e.g., fetching order details)
+app.use('/api/order', orderRoutes); 
+app.use('/api/delivery', deliveryRoutes);// Order routes (e.g., fetching order details)
 
 console.log("✅ Registering delivery routes...");
 app.use("/api/delivery", deliveryRoutes);

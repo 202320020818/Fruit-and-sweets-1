@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Card, Row, Col, Button, Input, Form, Typography, Mentions, Cascader, DatePicker, InputNumber, Select, TreeSelect, List, Image } from "antd";
+import { message,Card, Row, Col, Button, Form, Typography, DatePicker, Select, Input, List, Image } from "antd";
 import { useSelector } from "react-redux";
 import { loadStripe } from "@stripe/stripe-js";
 import { useNavigate } from "react-router-dom";
+import styles from '../Style.module.css'
 
 const { Title, Text } = Typography;
 const stripePromise = loadStripe("your-stripe-public-key");
@@ -17,33 +18,69 @@ export default function CartPage() {
   const [form] = Form.useForm();
 
   useEffect(() => {
+    if (currentUser?.email) {
+      form.setFieldsValue({ email: currentUser.email });
+    }
+  }, [currentUser, form]);
+
+  useEffect(() => {
     if (userId) {
       fetch(`/api/cart/items/${userId}`)
         .then((res) => res.json())
         .then((data) => setCartItems(data.data))
+       
         .catch((error) => console.error("Error fetching cart items:", error));
+        console.log("Cart Items",cartItems)
     }
   }, [userId]);
 
   const handleCheckout = async () => {
     try {
+      // Validate the form fields before proceeding
       await form.validateFields();
+  
+      // Get form data
+      const formData = form.getFieldsValue();
+  
+      // Save delivery details
+      const saveResponse = await fetch("/api/delivery/saveDeliveryDetails", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData), // Send the form data to be saved in MongoDB
+      });
+      
+      if (!saveResponse.ok) {
+        throw new Error("Failed to save order data!");
+      }
+  
+      if(saveResponse.ok){
       const stripe = await stripePromise;
       const session = await fetch("/api/payment/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: cartItems })
-      }).then(res => res.json());
-
+        body: JSON.stringify({ items: cartItems }),
+      }).then((res) => res.json());
+  
       if (session.id) {
         await stripe.redirectToCheckout({ sessionId: session.id });
       }
+    }
     } catch (error) {
-      formRef.current.scrollIntoView({ behavior: "smooth" });
+      console.error("Checkout Error:", error);
+  
+      // Show a more specific error message
+      message.error(error.message || "Please fill all required fields before proceeding!");
+  
+      // Scroll to form if validation failed
+      if (formRef.current) {
+        formRef.current.scrollIntoView({ behavior: "smooth" });
+      }
     }
   };
 
-  const variant = Form.useWatch('variant', form);
+  const variant = Form.useWatch("variant", form);
   const formItemLayout = {
     labelCol: {
       xs: { span: 24 },
@@ -76,41 +113,55 @@ export default function CartPage() {
 
           <Card style={{ marginTop: 16 }}>
             <div ref={formRef}>
-              <Title level={5}>Delivery Details</Title>
+              <Title style={{ marginBottom: 60 }} level={5}>
+                Delivery Details
+              </Title>
               <Form
                 {...formItemLayout}
                 form={form}
-                variant={variant || 'outlined'}
-                style={{ maxWidth: 600 }}
-                initialValues={{ variant: 'filled' }}
+                variant={variant || "outlined"}
+                style={{ maxWidth: 1200 }}
+                initialValues={{ variant: "filled" }}
               >
-                <Row gutter={16}>
+                <Row gutter={14}>
                   {/* Left Section */}
                   <Col span={12}>
-                 
-
                     <Form.Item
                       label="Customer Name"
                       name="customerName"
-                      rules={[{ required: true, message: 'Please input!' }]}
+                      labelCol={{ span: 7 }}
+                      wrapperCol={{ span: 16 }}
+                      rules={[{ required: true, message: "Please enter customer name!" }]}
                     >
-                      <InputNumber style={{ width: '100%' }} />
+                      <Input className={styles['ant-input']}/>
                     </Form.Item>
-
+                    <Form.Item
+                      label="Mobile Number"
+                      name="mobileNumber"
+                      labelCol={{ span: 7 }}
+                      wrapperCol={{ span: 16 }}
+                      rules={[{ required: true, message: "Please enter mobile number!" }]}
+                    >
+                       <Input className={styles['ant-input']}/>
+                    </Form.Item>
                     <Form.Item
                       label="Delivery Address"
                       name="deliveryAddress"
-                      rules={[{ required: true, message: 'Please input!' }]}
+                      labelCol={{ span: 7 }}
+                      wrapperCol={{ span: 16 }}
+                      rules={[{ required: true, message: "Please enter delivery address" }]}
                     >
                       <Input.TextArea />
                     </Form.Item>
 
                     <Form.Item
-                      label="Email"
-                      name="email"
-                      rules={[{ required: true, message: 'Please input!' }]}
+                      label="Postal Code"
+                      name="postalCode"
+                      labelCol={{ span: 7 }}
+                      wrapperCol={{ span: 16 }}
+                      rules={[{ required: true, message: "please enter your postal code !" }]}
                     >
-                      <Mentions />
+                       <Input className={styles['ant-input']}/>
                     </Form.Item>
                   </Col>
 
@@ -119,44 +170,46 @@ export default function CartPage() {
                     <Form.Item
                       label="Delivery Type"
                       name="deliveryType"
-                      rules={[{ required: true, message: 'Please input!' }]}
+                      rules={[{ required: true, message: "Select delivery type!" }]}
                     >
-                      <Select placeholder="Select province">
-            <Option value="0">Online Payment</Option>
-            <Option value="1">Cash On Delivery</Option>
-          </Select>
+                      <Select placeholder="Select Delivery Type">
+                        <Select.Option value="0">Online Payment</Select.Option>
+                        <Select.Option value="1">Cash On Delivery</Select.Option>
+                      </Select>
                     </Form.Item>
 
                     <Form.Item
-                      label="Cascader"
-                      name="Cascader"
-                      rules={[{ required: true, message: 'Please input!' }]}
+                      label={
+                        <div style={{ whiteSpace: "pre-line" }}>
+                          Delivery
+                          {"\n"}
+                          Service
+                        </div>
+                      }
+                      name="deliveryService"
+                      rules={[{ required: true, message: "Slelect delivery service provider" }]}
                     >
-                      <Cascader />
+                      <Select placeholder="Select Delivery Service Provider">
+                        <Select.Option value="uber">Uber</Select.Option>
+                        <Select.Option value="pickme">Pick Me</Select.Option>
+                        <Select.Option value="darazd">Daraz Delivery</Select.Option>
+                        <Select.Option value="fardar">Fardar</Select.Option>
+                        <Select.Option value="koombiyo">Koombiyo</Select.Option>
+                      </Select>
                     </Form.Item>
-
                     <Form.Item
-                      label="TreeSelect"
-                      name="TreeSelect"
-                      rules={[{ required: true, message: 'Please input!' }]}
+                      label="Email"
+                      name="email"
+                      rules={[{ required: true, message: "Please enter your email!" }]}
                     >
-                      <TreeSelect />
+                       <Input className={styles['ant-input']}/>
                     </Form.Item>
-
                     <Form.Item
-                      label="DatePicker"
-                      name="DatePicker"
-                      rules={[{ required: true, message: 'Please input!' }]}
+                      label="District"
+                      name="district"
+                      rules={[{ required: true, message: "Please input your district" }]}
                     >
-                      <DatePicker />
-                    </Form.Item>
-
-                    <Form.Item
-                      label="RangePicker"
-                      name="RangePicker"
-                      rules={[{ required: true, message: 'Please input!' }]}
-                    >
-                      <RangePicker />
+                       <Input className={styles['ant-input']}/>
                     </Form.Item>
                   </Col>
                 </Row>
@@ -166,7 +219,7 @@ export default function CartPage() {
         </Col>
 
         <Col md={8}>
-          <Card title="Summary">
+          <Card title="Order Summary">
             <List>
               <List.Item>
                 <Text>Products</Text>

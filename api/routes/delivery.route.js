@@ -11,7 +11,7 @@ import{
 
 const router = express.Router();
 // Routes
-router.post("/", createDelivery);        // Create a delivery
+router.post("/saveDeliveryDetails", createDelivery);        // Create a delivery
 router.get("/", getAllDeliveries);       // Get all deliveries
 router.get("/:id", getDeliveryById);     // Get delivery by ID
 router.put("/:id", updateDelivery);      // Update delivery

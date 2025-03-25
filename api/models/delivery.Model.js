@@ -2,27 +2,29 @@ import mongoose from "mongoose";
 
 const deliverySchema = new mongoose.Schema(
   {
-    orderId: { type: String, required: true },
-    customerName: { type: String, required: true },
-    phoneNo: { type: String, required: true },
-    email: { type: String, required: true },
-    address: { type: String, required: true },
-    
+    orderId: { type: String, required: false },
+    customerName: { type: String, required: false },
+    phoneNo: { type: String, required: false }, // Mapping from mobileNumber
+    email: { type: String, required: false },
+    address: { type: String, required: false }, // Mapping from deliveryAddress
+    postalCode: { type: String, required: false }, // Added postalCode
+    district: { type: String, required: false }, // Added district
+
     deliveryType: { 
       type: String, 
-      enum: ["Cash on Delivery", "Online Payment"], 
-      required: true 
+      enum: ["1", "0"], 
+      required: false 
     },
-
-    amount: { type: Number, required: true },
-    deliveryCharge: { type: Number, required: true },
-    totalAmount: { type: Number},
 
     deliveryService: { 
       type: String, 
-      enum: ["Uber", "PickMe"], 
-      required: true 
-    }, 
+      enum: ["uber", "pickme", "darazd", "fardar", "koombiyo"], 
+      required: false 
+    },
+
+    amount: { type: Number, required: false },
+    deliveryCharge: { type: Number, required: false },
+    totalAmount: { type: Number },
 
     status: {
       type: String,
@@ -44,4 +46,3 @@ deliverySchema.pre("save", function (next) {
 
 const Delivery = mongoose.model("Delivery", deliverySchema);
 export default Delivery;
-

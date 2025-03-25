@@ -1,27 +1,36 @@
-
 import mongoose from 'mongoose';
 import Delivery from "../models/delivery.Model.js";
 
 // CREATE - Insert a new delivery record
 export const createDelivery = async (req, res) => {
   try {
-    const { orderId, customerName, phoneNo, email, address, deliveryType, amount, deliveryCharge, deliveryService } = req.body;
+    const {
+      customerName,
+      mobileNumber,
+      email,
+      deliveryAddress,
+      postalCode,
+      deliveryType,
+      deliveryService,
+      district,
 
-    // Validate required fields
-    if (!orderId || !customerName || !phoneNo || !email || !address || !deliveryType || !amount || !deliveryCharge || !deliveryService) {
-      return res.status(400).json({ message: "All fields are required!" });
-    }
+    } = req.body;
+
+    // // Validate required fields
+    // if (!orderId || !customerName || !mobileNumber || !email || !deliveryAddress || !postalCode || !deliveryType || !deliveryService || !district || !amount || !deliveryCharge) {
+    //   return res.status(400).json({ message: "All fields are required!" });
+   // }
 
     const newDelivery = new Delivery({
-      orderId,
       customerName,
-      phoneNo,
-      email,
-      address,
+      deliveryAddress,
+      deliveryService,
       deliveryType,
-      amount,
-      deliveryCharge,
-      deliveryService
+      district,
+      email,
+      mobileNumber,
+      postalCode
+     
     });
 
     await newDelivery.save();
