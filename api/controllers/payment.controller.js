@@ -5,13 +5,11 @@ import Stripe from 'stripe';
 import { query } from 'express';
 const stripe = Stripe("sk_test_51R1EIIDWYegqaTAkSR8SSLTlROdixGUzqEpC8eeMTe3ce8ALYEqNqOxkzgGEhI0kEqqy4XL9VU9hy8BRkSbMSII300aF88jnvy"); // Use the environment variable for the secret key
 
-// Add item to the cart
 export const addToCart = async (req, res) => {
   const { userId, itemName, price, image, createdBy, updatedBy, description, category, quantity = 1 } = req.body;
   const itemId = uuidv4(); 
 
   try {
-    // Create a new cart item instance
     const newCartItem = new CartItem({
       userId,
       itemId,
@@ -25,7 +23,6 @@ export const addToCart = async (req, res) => {
       quantity,
     });
 
-    // Save the item in the database
     await newCartItem.save();
     return res.status(201).json({
       success: true,
@@ -42,7 +39,7 @@ export const addToCart = async (req, res) => {
   }
 };
 
-// Get all cart items
+
 export const getCartItems = async (req, res) => {
   const { userId } = req.params;
   try {
@@ -75,7 +72,7 @@ export const createCheckoutSession = async (req, res) => {
           product_data: {
             name: item.name,
           },
-          unit_amount: Math.round(item.price * 100),
+          unit_amount: Math.round(item.price * 100), 
         },
         quantity: item.quantity,
       })),
@@ -128,8 +125,6 @@ export const handleStripeWebhook = async (req, res) => {
     console.error('Webhook signature verification failed:', err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
-
-  // Log the event data for debugging
   console.log("Event type:", event.type);
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
@@ -158,7 +153,6 @@ export const handleStripeWebhook = async (req, res) => {
     console.error(' Error updating order status in webhook:', error.message);
   }
 
-   // Remove cart items after successful payment
    const userId = session.metadata.userId;  
    const result = await CartItem.deleteMany({ userId });
   if (result.deletedCount > 0) {

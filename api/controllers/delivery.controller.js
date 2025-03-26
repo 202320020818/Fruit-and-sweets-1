@@ -16,10 +16,6 @@ export const createDelivery = async (req, res) => {
       userId
     } = req.body;
 
-    // // Validate required fields
-    // if (!orderId || !customerName || !mobileNumber || !email || !deliveryAddress || !postalCode || !deliveryType || !deliveryService || !district || !amount || !deliveryCharge) {
-    //   return res.status(400).json({ message: "All fields are required!" });
-   // }
 
     const newDelivery = new Delivery({
       customerName,

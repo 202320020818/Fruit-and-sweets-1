@@ -9,7 +9,7 @@ import DeliveryDetailsList from '../components/DeliveryDetailsList';
 
 const { Panel } = Collapse;
 const { Title, Text } = Typography;
-const stripePromise = loadStripe("sk_test_51R1EIIDWYegqaTAkSR8SSLTlROdixGUzqEpC8eeMTe3ce8ALYEqNqOxkzgGEhI0kEqqy4XL9VU9hy8BRkSbMSII300aF88jnvy");
+const stripePromise = loadStripe("pk_test_51R1EIIDWYegqaTAkzg9ID8J9AvbcIW7Aq28MPvbwFRqlajzS5FWLldM4XGFW4Xp5NO2sGpGZWXow3ejmHIXChlkC00Dw1heT33");
 
 export default function CartPage() {
 
@@ -102,13 +102,11 @@ export default function CartPage() {
 
   const handleCheckout = async () => {
     try {
-      // If no saved delivery details selected and not creating new details
       if (!selectedDeliveryId && !isNewDeliveryDetails) {
         message.error("Please select a delivery option or add new delivery details.");
         return;
       }
 
-      // If creating new delivery details, validate the form
       if (isNewDeliveryDetails) {
         await form.validateFields();
       }

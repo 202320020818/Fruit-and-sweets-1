@@ -1,7 +1,6 @@
 import { v4 as uuidv4 } from 'uuid'; 
 import CartItem from "../models/CartItemSchema.js";
 
-// Add item to the cart
 export const addToCart = async (req, res) => {
   const { userId, itemName, price, image, createdBy, updatedBy, description, category, quantity = 1 } = req.body;
   const itemId = uuidv4();
@@ -19,7 +18,6 @@ export const addToCart = async (req, res) => {
       quantity,
     });
 
-    // Save the item to the database
     await newCartItem.save();
     return res.status(201).json({success: true,message: "Item added to cart successfully",data: newCartItem });
   } catch (error) {
@@ -45,7 +43,6 @@ export const getCartItems = async (req, res) => {
 };
 
 
-// Update item quantity in the cart
 export const updateCartItemQuantity = async (req, res) => {
   const { itemId } = req.params;
   const { quantity } = req.body; 
@@ -66,7 +63,6 @@ export const updateCartItemQuantity = async (req, res) => {
 };
 
 
-// Delete item from cart
 export const deleteCartItem = async (req, res) => {
   const { userId, itemId } = req.params; 
   try {
