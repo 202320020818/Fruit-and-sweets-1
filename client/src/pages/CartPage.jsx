@@ -9,7 +9,7 @@ import DeliveryDetailsList from '../components/DeliveryDetailsList';
 
 const { Panel } = Collapse;
 const { Title, Text } = Typography;
-const stripePromise = loadStripe("sk_test_51R1EIIDWYegqaTAkSR8SSLTlROdixGUzqEpC8eeMTe3ce8ALYEqNqOxkzgGEhI0kEqqy4XL9VU9hy8BRkSbMSII300aF88jnvy");
+const stripePromise = loadStripe("pk_test_51R1EIIDWYegqaTAkzg9ID8J9AvbcIW7Aq28MPvbwFRqlajzS5FWLldM4XGFW4Xp5NO2sGpGZWXow3ejmHIXChlkC00Dw1heT33");
 
 export default function CartPage() {
 
