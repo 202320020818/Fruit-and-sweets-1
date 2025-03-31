@@ -91,7 +91,7 @@ export default function DashSidebar() {
                   Users
                 </Sidebar.Item>
               </Link>
-<<<<<<< HEAD
+
 
               <Link to='/dashboard?tab=feedback'>
                 <Sidebar.Item
@@ -102,8 +102,8 @@ export default function DashSidebar() {
                   Feedback
                 </Sidebar.Item>
               </Link>
-=======
->>>>>>> 4ccaa7146c979f03a8506a948456ea22fca4c1b4
+
+
               
               <Link to='/dashboard?tab=comments'>
                 <Sidebar.Item

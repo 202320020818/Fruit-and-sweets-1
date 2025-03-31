@@ -2,10 +2,10 @@ import React from 'react';
 
 function About() {
   return (
-<<<<<<< HEAD
+
     <div>
       
-=======
+=
     <div style={styles.container}>
       <div style={styles.inclinedBackground}></div> {/* Inclined background */}
       
@@ -63,15 +63,15 @@ function About() {
           Visit us today and experience the sweetness of nature at Dhananjee Fruit & Sweet Center.
         </p>
       </div>
->>>>>>> 4ccaa7146c979f03a8506a948456ea22fca4c1b4
+    </div>
     </div>
   );
 }
 
-<<<<<<< HEAD
+
 export default About
 
-=======
+
 const styles = {
   container: {
     fontFamily: 'Roboto, sans-serif',
@@ -140,4 +140,3 @@ const styles = {
     textDecoration: 'none',
   }
 };
->>>>>>> 4ccaa7146c979f03a8506a948456ea22fca4c1b4
