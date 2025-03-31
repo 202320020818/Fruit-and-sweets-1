@@ -10,6 +10,7 @@ import cookieParser from 'cookie-parser';
 import admin from "./config/firebase.js";
 import cors from 'cors';
 import { stripeRawBodyMiddleware } from './middleware/stripeRawBoady.js';
+import inventoryRoutes from "./routes/inventory.route.js";
 
 import bodyParser from 'body-parser';
 import deliveryRoutes from "./routes/delivery.route.js"; 
@@ -56,6 +57,7 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/payment', paymentRoutes); 
 app.use('/api/order', orderRoutes); 
 app.use('/api/delivery', deliveryRoutes);// Order routes (e.g., fetching order details)
+app.use("/api/inventory", inventoryRoutes);
 
 console.log("✅ Registering delivery routes...");
 app.use("/api/delivery", deliveryRoutes);
