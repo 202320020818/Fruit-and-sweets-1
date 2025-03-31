@@ -10,6 +10,7 @@ import cookieParser from 'cookie-parser';
 import admin from './config/firebase.js'; 
 import cors from 'cors';
 import orderRoutes from './routes/order.route.js'; // Import order routes
+import feedbackRoutes from "./routes/feedback.route.js";
 
 dotenv.config();
 
@@ -43,13 +44,16 @@ app.listen(3000, () => {
 });
 
 // Routes for user and authentication
+app.use("/uploads", express.static("uploads"));
 app.use("/api/user", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/payment', paymentRoutes); 
 // Define the routes for user, authentication, cart, payment, and orders
 app.use('/api/order', orderRoutes); // Order routes (e.g., fetching order details)
+app.use("/api/feedback", feedbackRoutes); //Add feedback route
 // Error handling middleware
+
 
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;

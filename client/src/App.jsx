@@ -12,6 +12,8 @@ import PrivateRoute from './components/PrivateRoute';
 import CartPage from "./pages/CartPage";
 import PaymentSuccess from "./pages/PaymentSuccess"
 import OrderPage from './pages/OrderPage'; // Import OrderPage component
+import FeedbackForm from "./pages/feedbackForm";
+
 
 
 
@@ -32,6 +34,7 @@ export default function App() {
         <Route path="/cart" element={<CartPage />} />
         <Route path="/payment-success" element={<PaymentSuccess />} />
         <Route path="/order" element={<OrderPage />} /> {/* Order page route */}
+        <Route path="/feedback" element={<FeedbackForm />} />
 
 
       </Routes>
