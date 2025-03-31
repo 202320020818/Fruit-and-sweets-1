@@ -1,73 +1,95 @@
-import React, { useEffect, useState } from "react";
-import { Card, Row, Col, Button, InputNumber, Typography, Tooltip, List, Image } from "antd";
-import { MinusOutlined, PlusOutlined, DeleteOutlined, HeartOutlined } from "@ant-design/icons";
-import { useSelector } from "react-redux"; 
-import { loadStripe } from "@stripe/stripe-js"; 
-import { useNavigate } from "react-router-dom"; 
+import React, { useEffect, useState, useRef } from "react";
+import { message, Card,Modal,Collapse, Radio,Descriptions, Row, Col, Button, Form, InputNumber, Typography, Tooltip, Select, Input, List, Image } from "antd";
+import { DeleteOutlined,DownOutlined, HeartOutlined, MinusOutlined, PlusOutlined } from "@ant-design/icons";
+import { useSelector } from "react-redux";
+import { loadStripe } from "@stripe/stripe-js";
+import { useNavigate } from "react-router-dom";
+import styles from '../Style.module.css'
+import DeliveryDetailsList from '../components/DeliveryDetailsList';
 
+const { Panel } = Collapse;
 const { Title, Text } = Typography;
-
 const stripePromise = loadStripe("pk_test_51R1EIIDWYegqaTAkzg9ID8J9AvbcIW7Aq28MPvbwFRqlajzS5FWLldM4XGFW4Xp5NO2sGpGZWXow3ejmHIXChlkC00Dw1heT33");
 
 export default function CartPage() {
-  const currentUser = useSelector((state) => state.user.currentUser); 
-  const userId = currentUser?._id; 
-  const navigate = useNavigate(); 
 
-  const [cartItems, setCartItems] = useState([]); 
 
-  // Fetch cart items when component mounts
+  const currentUser = useSelector((state) => state.user.currentUser);
+  const userId = currentUser?._id;
+  const navigate = useNavigate();
+  const formRef = useRef(null);
+  const [cartItems, setCartItems] = useState([]);
+  const [deliveryDetails, setDeliveryDetails] = useState([]);
+  const [selectedDeliveryId, setSelectedDeliveryId] = useState(null);
+  const [isNewDeliveryDetails, setIsNewDeliveryDetails] = useState(false);
+  const [form] = Form.useForm();
+  const totalAmount = (cartItems?.reduce((total, item) => total + item.price * item.quantity, 0)) || 0;
+  const [expandedDetails, setExpandedDetails] = useState(null);
+  useEffect(() => {
+    if (currentUser?.email) {
+      form.setFieldsValue({ email: currentUser.email });
+    }
+  }, [currentUser, form]);
+
+  const toggleDetailsExpansion = (detailId) => {
+    setExpandedDetails(prevExpanded => 
+      prevExpanded === detailId ? null : detailId
+    );
+  };
+
   useEffect(() => {
     if (userId) {
-      const fetchCartItems = async () => {
-        try {
-          const response = await fetch(`/api/cart/items/${userId}`);
-          const data = await response.json();
-
-          if (response.ok) {
-            setCartItems(data.data); 
-          } else {
-            console.error("Error fetching cart items:", data.message);
+      // Fetch delivery details
+      fetch(`/api/delivery/getDeliveryDetailsByUser/${userId}`)
+        .then((res) => res.json())
+        .then((data) => {
+          console.log("API Response for Delivery Details:", data);
+          const fetchedDeliveryDetails = data?.data || data || [];
+          setDeliveryDetails(fetchedDeliveryDetails);
+          
+          // If there are saved delivery details, select the first one by default
+          if (fetchedDeliveryDetails.length > 0) {
+            setSelectedDeliveryId(fetchedDeliveryDetails[0]._id);
           }
-        } catch (error) {
-          console.error("Error:", error);
-        }
-      };
-
-      fetchCartItems();
+        })
+        .catch((error) => console.error("Error fetching delivery details:", error));
+      
+      // Fetch cart items
+      fetch(`/api/cart/items/${userId}`)
+        .then((res) => res.json())
+        .then((data) => setCartItems(data.data))
+        .catch((error) => console.error("Error fetching cart items:", error));
     }
   }, [userId]);
 
-  // Handle quantity update
-const handleQuantityChange = async (itemId, quantity) => {
-  try {
-    const updatedCartItems = cartItems.map((item) =>
-      item.itemId === itemId ? { ...item, quantity } : item
-    );
-    setCartItems(updatedCartItems);
-
-    // Update in backend
-    const response = await fetch(`/api/cart/item/${itemId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ quantity }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to update quantity');
+  const handleQuantityChange = async (itemId, quantity) => {
+    try {
+      const updatedCartItems = cartItems.map((item) =>
+        item.itemId === itemId ? { ...item, quantity } : item
+      );
+      setCartItems(updatedCartItems);
+  
+      // Update in backend
+      const response = await fetch(`/api/cart/item/${itemId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quantity }),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to update quantity');
+      }
+    } catch (error) {
+      console.error('Error updating item quantity:', error);
     }
-  } catch (error) {
-    console.error('Error updating item quantity:', error);
-  }
-};
-
-  // Handle item deletion
+  };
+  
   const handleDelete = async (itemId) => {
     try {
       const response = await fetch(`/api/cart/item/${userId}/${itemId}`, { method: 'DELETE' });
-
+  
       const data = await response.json();
-
+  
       if (response.ok) {
         setCartItems((prevItems) => prevItems.filter((item) => item.itemId !== itemId));
       } else {
@@ -78,16 +100,44 @@ const handleQuantityChange = async (itemId, quantity) => {
     }
   };
 
-  // Handle checkout
   const handleCheckout = async () => {
-    const stripe = await stripePromise;
-
-    const orderDetails = {
-      items: cartItems,
-      totalAmount: cartItems.reduce((total, item) => total + item.price * item.quantity, 0),
-    };
-
     try {
+      if (!selectedDeliveryId && !isNewDeliveryDetails) {
+        message.error("Please select a delivery option or add new delivery details.");
+        return;
+      }
+
+      if (isNewDeliveryDetails) {
+        await form.validateFields();
+      }
+
+      const formData = form.getFieldsValue();
+      
+      // Determine which delivery details to use
+      const deliveryDetailsToUse = isNewDeliveryDetails 
+        ? { ...formData, userId }
+        : deliveryDetails.find(detail => detail._id === selectedDeliveryId);
+
+      const saveResponse = await fetch("/api/delivery/saveDeliveryDetails", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(isNewDeliveryDetails ? deliveryDetailsToUse : deliveryDetailsToUse), 
+      });
+
+      const responseData = await saveResponse.json();
+      if (!saveResponse.ok) {
+        throw new Error("Failed to save order data!");
+      }
+
+      const stripe = await stripePromise;
+      const orderDetails = {
+        items: cartItems,
+        totalAmount: cartItems.reduce((total, item) => total + item.price * item.quantity, 0),
+        userDeliveryDetailsId: responseData.data._id
+      };
+
       const response = await fetch("/api/payment/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -98,9 +148,9 @@ const handleQuantityChange = async (itemId, quantity) => {
 
       if (session.id) {
         setCartItems([]);  
-
+        
         const { error } = await stripe.redirectToCheckout({ sessionId: session.id });
-
+      
         if (!error) {
           // Confirm payment in backend
           const paymentConfirmationResponse = await fetch("/api/payment/confirm-payment", {
@@ -126,9 +176,25 @@ const handleQuantityChange = async (itemId, quantity) => {
         alert("Failed to create checkout session.");
       }
     } catch (error) {
-      console.error("Error initiating checkout:", error);
-      alert("An error occurred while processing the payment");
+      console.error("Checkout Error:", error);
+      message.error(error.message || "Please fill all required fields before proceeding!");
+
+      if (formRef.current) {
+        formRef.current.scrollIntoView({ behavior: "smooth" });
+      }
     }
+  };
+  
+  const variant = Form.useWatch("variant", form);
+  const formItemLayout = {
+    labelCol: {
+      xs: { span: 24 },
+      sm: { span: 6 },
+    },
+    wrapperCol: {
+      xs: { span: 24 },
+      sm: { span: 14 },
+    },
   };
 
   return (
@@ -155,7 +221,7 @@ const handleQuantityChange = async (itemId, quantity) => {
                           type="text"
                           danger
                           icon={<DeleteOutlined />}
-                          onClick={() => handleDelete(item.itemId)} 
+                          onClick={() => handleDelete(item.itemId)}
                         />
                       </Tooltip>
                       <Tooltip title="Move to wishlist">
@@ -167,17 +233,17 @@ const handleQuantityChange = async (itemId, quantity) => {
                         min={1}
                         value={item.quantity}
                         style={{ width: "60px" }}
-                        onChange={(value) => handleQuantityChange(item.itemId, value)} 
+                        onChange={(value) => handleQuantityChange(item.itemId, value)}
                       />
                       <Button
                         icon={<MinusOutlined />}
                         style={{ marginLeft: "5px" }}
-                        onClick={() => handleQuantityChange(item.itemId, Math.max(item.quantity - 1, 1))} 
+                        onClick={() => handleQuantityChange(item.itemId, Math.max(item.quantity - 1, 1))}
                       />
                       <Button
                         icon={<PlusOutlined />}
                         style={{ marginLeft: "5px" }}
-                        onClick={() => handleQuantityChange(item.itemId, item.quantity + 1)} 
+                        onClick={() => handleQuantityChange(item.itemId, item.quantity + 1)}
                       />
                     </Col>
                     <Col span={4}>
@@ -188,30 +254,184 @@ const handleQuantityChange = async (itemId, quantity) => {
               )}
             />
           </Card>
-          <Card style={{ marginTop: 16 }}>
-            <Title level={5}>Expected shipping delivery</Title>
-            <Text>12.10.2020 - 14.10.2020</Text>
+
+          <Card style={{ marginTop: 16, position: "relative"  }}>
+            <div ref={formRef}>
+            <Row justify="space-between" align="middle">
+    <Col>
+      <Title style={{ fontSize: 20, margin: 0 }} level={5}>
+        Delivery Details
+      </Title>
+    </Col>
+    <Col>
+      <Button
+        type="primary"
+        style={{ backgroundColor: "#52c41a", borderColor: "#52c41a" }}
+        onClick={() => {
+          setIsNewDeliveryDetails(true);
+          setSelectedDeliveryId(null);
+        }}
+        icon={<PlusOutlined />}
+      >
+        Add New Delivery Details
+      </Button>
+    </Col>
+  </Row>
+  
+
+              {deliveryDetails.length > 0 ? (
+  <div>
+    <Row gutter={16} style={{ marginBottom: 16 }}>
+      <Col span={12}>
+        <Text strong>Select Delivery Option</Text>
+        <DeliveryDetailsList 
+          deliveryDetails={deliveryDetails}
+          selectedDeliveryId={isNewDeliveryDetails ? null : selectedDeliveryId}
+          onSelectDelivery={(id) => {
+            setSelectedDeliveryId(id);
+            setIsNewDeliveryDetails(false);
+          }}
+        />
+      </Col>
+     
+  
+
+    </Row>
+    
+  </div>
+) : (
+  
+  <Text type="warning">No saved delivery details. Please fill in the form below.</Text>
+  
+)}
+
+              {(deliveryDetails.length === 0 || isNewDeliveryDetails) && (
+                <Form
+                  {...formItemLayout}
+                  form={form}
+                  variant={variant || "outlined"}
+                  style={{ maxWidth: 1200, marginTop: 30 }}
+                  initialValues={{ variant: "filled" }}
+                >
+                  <Row gutter={16}>
+                    {/* Left Section */}
+                    <Col span={12}>
+                      <Form.Item
+                        label="Customer Name"
+                        name="customerName"
+                        labelCol={{ span: 7 }}
+                        wrapperCol={{ span: 16 }}
+                        rules={[{ required: true, message: "Please enter customer name!" }]}
+                      >
+                        <Input className={styles["ant-input"]} />
+                      </Form.Item>
+                      <Form.Item
+                        label="Mobile Number"
+                        name="mobileNumber"
+                        labelCol={{ span: 7 }}
+                        wrapperCol={{ span: 16 }}
+                        rules={[{ required: true, message: "Please enter mobile number!" }]}
+                      >
+                        <Input className={styles["ant-input"]} />
+                      </Form.Item>
+                      <Form.Item
+                        label="Delivery Address"
+                        name="deliveryAddress"
+                        labelCol={{ span: 7 }}
+                        wrapperCol={{ span: 16 }}
+                        rules={[{ required: true, message: "Please enter delivery address" }]}
+                      >
+                        <Input.TextArea />
+                      </Form.Item>
+                      <Form.Item
+                        label="Postal Code"
+                        name="postalCode"
+                        labelCol={{ span: 7 }}
+                        wrapperCol={{ span: 16 }}
+                        rules={[{ required: true, message: "Please enter your postal code!" }]}
+                      >
+                        <Input className={styles["ant-input"]} />
+                      </Form.Item>
+                    </Col>
+
+                    {/* Right Section */}
+                    <Col span={12}>
+                      <Form.Item
+                        label="Delivery Type"
+                        name="deliveryType"
+                        rules={[{ required: true, message: "Select delivery type!" }]}
+                      >
+                        <Select placeholder="Select Delivery Type">
+                          <Select.Option value="0">Online Payment</Select.Option>
+                          <Select.Option value="1">Cash On Delivery</Select.Option>
+                        </Select>
+                      </Form.Item>
+
+                      <Form.Item
+                        label={
+                          <div style={{ whiteSpace: "pre-line" }}>
+                            Delivery
+                            {"\n"}
+                            Service
+                          </div>
+                        }
+                        name="deliveryService"
+                        rules={[{ required: true, message: "Select delivery service provider" }]}
+                      >
+                        <Select placeholder="Select Delivery Service Provider">
+                          <Select.Option value="uber">Uber</Select.Option>
+                          <Select.Option value="pickme">Pick Me</Select.Option>
+                          <Select.Option value="darazd">Daraz Delivery</Select.Option>
+                          <Select.Option value="fardar">Fardar</Select.Option>
+                          <Select.Option value="koombiyo">Koombiyo</Select.Option>
+                        </Select>
+                      </Form.Item>
+                      <Form.Item
+                        label="Email"
+                        name="email"
+                        rules={[{ required: true, message: "Please enter your email!" }]}
+                      >
+                        <Input className={styles["ant-input"]} />
+                      </Form.Item>
+                      <Form.Item
+                        label="District"
+                        name="district"
+                        rules={[{ required: true, message: "Please input your district" }]}
+                      >
+                        <Input className={styles["ant-input"]} />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+                </Form>
+              )}
+            </div>
           </Card>
         </Col>
 
         <Col md={8}>
-          <Card title="Summary">
+          <Card title="Order Summary">
             <List>
               <List.Item>
                 <Text>Products</Text>
-                <Text>${cartItems.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2)}</Text>
+                <Text>${totalAmount.toFixed(2)}</Text>
               </List.Item>
               <List.Item>
                 <Text>Shipping</Text>
                 <Text>Gratis</Text>
               </List.Item>
               <List.Item>
-                <Text strong>Total (including VAT)</Text>
-                <Text strong>${cartItems.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2)}</Text>
+                <Text strong>Total (incl. VAT)</Text>
+                <Text strong>${totalAmount.toFixed(2)}</Text>
               </List.Item>
             </List>
-            <Button type="primary" block style={{ marginTop: 16 }} onClick={handleCheckout}>
-              Go to checkout
+            <Button 
+              type="primary" 
+              block 
+              style={{ marginTop: 16 }} 
+              onClick={handleCheckout} 
+              disabled={cartItems.length === 0}
+            >
+              Go to Checkout
             </Button>
           </Card>
         </Col>

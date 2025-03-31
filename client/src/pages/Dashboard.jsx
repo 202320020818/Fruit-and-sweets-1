@@ -7,7 +7,11 @@ import DashPosts from '../components/DashPosts';
 import DashUsers from '../components/DashUsers';
 import DashComments from '../components/DashComments';
 import DashboardComp from '../components/DashboardComp';
+<<<<<<< HEAD
 import FeedbackDashboard from './FeedbackDashboard';
+=======
+import AdminDeliveryManagement from './AdminDeliveryManagement';
+>>>>>>> 4ccaa7146c979f03a8506a948456ea22fca4c1b4
 
 
 export default function Dashboard() {
@@ -23,21 +27,20 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
       <div className="md:w-56">
-        {/* Sidebar */}
         <DashSidebar />
       </div>
-      {/* profile... */}
       {tab === "profile" && <DashProfile />}
-      {/* posts... */}
       {tab === "posts" && <DashPosts />}
-      {/* users */}
       {tab === "users" && <DashUsers />}
+<<<<<<< HEAD
       {/* feedback */}
       {tab === "feedback" && <FeedbackDashboard />}
       {/* dashboard comp */}
       {/* comments  */}
+=======
+>>>>>>> 4ccaa7146c979f03a8506a948456ea22fca4c1b4
       {tab === "comments" && <DashComments />}
-      {/* dashboard comp */}
+      {tab === "delivery-details" && <AdminDeliveryManagement />}
       {tab === "dash" && <DashboardComp />}
     </div>
   );

@@ -1,100 +1,87 @@
 import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux'; // Import useSelector to get the userId
-import { Table, Card, Typography, Button, InputNumber } from 'antd'; // Import Ant Design components
+import { useSelector } from 'react-redux';
+import { Table, Card, Typography, Button, InputNumber } from 'antd';
+import { EyeOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 
 const { Title } = Typography;
 
 export default function OrderPage() {
-  const currentUser = useSelector((state) => state.user.currentUser); // Get currentUser from Redux state
-  const userId = currentUser?._id; // Extract the userId from the logged-in user
-  const [cartItems, setCartItems] = useState([]); // State to hold the list of cart items
-  const [quantities, setQuantities] = useState({}); // State to hold the quantities of items
-  const [total, setTotal] = useState(0); // State to hold the total amount
+  const currentUser = useSelector((state) => state.user.currentUser);
+  const userId = currentUser?._id;
+  const [orders, setOrders] = useState([]);
+  const navigate = useNavigate();
 
-  // Fetch cart items from backend when component mounts or userId changes
+  // Fetch orders when component mounts or userId changes
   useEffect(() => {
     if (userId) {
-      const fetchCartItems = async () => {
+      const fetchOrders = async () => {
         try {
-          const response = await fetch(`/api/cart/items/${userId}`); // Fetch the user's cart items from the backend
+          const response = await fetch(`/api/order/completed-orders/${userId}`);
           const data = await response.json();
           if (response.ok) {
-            setCartItems(data.data); // Update the cart items state with the fetched data
-            const initialQuantities = {};
-            data.data.forEach(item => {
-              initialQuantities[item.itemId] = item.quantity;
-            });
-            setQuantities(initialQuantities); // Set initial quantities
-            calculateTotal(data.data, initialQuantities); // Calculate initial total
+            setOrders(data.data);
           } else {
-            console.error('Error fetching cart items:', data.message);
+            console.error('Error fetching orders:', data.message);
           }
         } catch (error) {
           console.error('Error:', error);
         }
       };
-      fetchCartItems(); // Call the fetch function
+      fetchOrders();
     }
-  }, [userId]); // Depend on userId to refetch cart items if the user changes
+  }, [userId]);
 
-  // Handle quantity change
-  const handleQuantityChange = (itemId, quantity) => {
-    setQuantities(prevQuantities => {
-      const newQuantities = {
-        ...prevQuantities,
-        [itemId]: quantity,
-      };
-      return newQuantities;
-    });
+  // Calculate total price for each order
+  const calculateOrderTotal = (items) => {
+    return items.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2);
   };
 
-  // Handle item update
-  const handleUpdate = async (itemId) => {
-    const quantity = quantities[itemId];
-    try {
-      const response = await fetch(`/api/cart/item/${itemId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ quantity }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update quantity');
-      }
-
-      // Update the cart items state with the new quantity
-      setCartItems(prevItems =>
-        prevItems.map(item =>
-          item.itemId === itemId ? { ...item, quantity } : item
-        )
-      );
-      calculateTotal(cartItems, quantities); // Recalculate total after update
-    } catch (error) {
-      console.error('Error updating item quantity:', error);
-    }
+  // Handle Track Order click event
+  const handleTrackOrderClick = (orderId) => {
+    console.log('Tracking order:', orderId);
+    navigate(`/trackOrder/${orderId}`);
   };
 
-  // Calculate total price
-  const calculateTotal = (items, quantities) => {
-    const totalAmount = items.reduce((total, item) => {
-      const quantity = quantities[item.itemId] || item.quantity;
-      return total + item.price * quantity;
-    }, 0).toFixed(2);
-    setTotal(totalAmount);
-  };
-
-  // Define columns for the table
+  // Define columns for the order table
   const columns = [
     {
-      title: 'Name',
+      title: 'Order ID',
+      dataIndex: 'orderId',
+      key: 'orderId',
+    },
+    {
+      title: 'Total Price',
+      key: 'totalPrice',
+      render: (text, record) => `Rs ${calculateOrderTotal(record.items)}`,
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      render: (text, record) => (
+        <Button
+          type="primary"
+          icon={<EyeOutlined />}
+          onClick={() => handleTrackOrderClick(record.orderId)} 
+        >
+          Track Order
+        </Button>
+      ),
+    },
+  ];
+
+  // Define columns for the items in each order
+  const itemColumns = [
+    {
+      title: 'Item Name',
       dataIndex: 'name',
       key: 'name',
     },
     {
-      title: 'Price',
+      title: 'Unit Price',
       dataIndex: 'price',
       key: 'price',
-      render: (text, record) => `$${(record.price * (quantities[record.itemId] || record.quantity)).toFixed(2)}`,
+      render: (text) => `$${text.toFixed(2)}`,
     },
     {
       title: 'Quantity',
@@ -103,40 +90,50 @@ export default function OrderPage() {
       render: (text, record) => (
         <InputNumber
           min={1}
-          value={quantities[record.itemId] || record.quantity}
-          onChange={(value) => handleQuantityChange(record.itemId, value)}
+          value={record.quantity}
+          onChange={(value) => handleQuantityChange(value, record, 'item')}
         />
       ),
     },
     {
-      title: 'Image',
-      dataIndex: 'image',
-      key: 'image',
-      render: (text) => <img src={text} alt="Product" width="100" />,
-    },
-    {
-      title: 'Update',
-      key: 'update',
-      render: (text, record) => (
-        <Button
-          type="primary"
-          onClick={() => handleUpdate(record.itemId)}
-        >
-          Update
-        </Button>
-      ),
+      title: 'Total Price',
+      key: 'totalPrice',
+      render: (text, record) => `$${(record.price * record.quantity).toFixed(2)}`,
     },
   ];
 
+  // Handle quantity change for an item
+  const handleQuantityChange = (value, record, type) => {
+    const updatedOrders = [...orders];
+    if (type === 'item') {
+      const orderIndex = updatedOrders.findIndex(order => order.orderId === record.orderId);
+      const itemIndex = updatedOrders[orderIndex].items.findIndex(item => item._id === record._id);
+      updatedOrders[orderIndex].items[itemIndex].quantity = value;
+    }
+    setOrders(updatedOrders);
+  };
+
   return (
     <div style={{ padding: '20px', backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
-      <Card title={`Cart Items - ${cartItems.length} items`}>
-        <Table dataSource={cartItems} columns={columns} rowKey="itemId" />
-        <div style={{ marginTop: '20px', textAlign: 'right' }}>
-          <Title level={4}>Total: ${total}</Title>
-        </div>
+      <Card title={`My Orders - ${orders.length} orders`} style={{ marginBottom: 20 }}>
+        <Table
+          dataSource={orders}
+          columns={columns}
+          rowKey="orderId"
+          expandable={{
+            expandedRowRender: (record) => (
+              <Table
+                dataSource={record.items}
+                columns={itemColumns}
+                pagination={false}
+                rowKey="_id"
+              />
+            ),
+            rowExpandable: (record) => record.items.length > 0,
+          }}
+          pagination={false}
+        />
       </Card>
     </div>
   );
 }
-

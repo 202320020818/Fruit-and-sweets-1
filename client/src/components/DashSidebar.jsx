@@ -8,6 +8,7 @@ import {
   HiChartPie,
   HiChatAlt2, // Added feedback icon
 } from 'react-icons/hi';
+import { FaTruck } from 'react-icons/fa';
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { signoutSuccess } from '../redux/user/userSlice';
@@ -90,6 +91,7 @@ export default function DashSidebar() {
                   Users
                 </Sidebar.Item>
               </Link>
+<<<<<<< HEAD
 
               <Link to='/dashboard?tab=feedback'>
                 <Sidebar.Item
@@ -100,6 +102,8 @@ export default function DashSidebar() {
                   Feedback
                 </Sidebar.Item>
               </Link>
+=======
+>>>>>>> 4ccaa7146c979f03a8506a948456ea22fca4c1b4
               
               <Link to='/dashboard?tab=comments'>
                 <Sidebar.Item
@@ -108,6 +112,12 @@ export default function DashSidebar() {
                   as='div'
                 >
                   Comments
+                </Sidebar.Item>
+              </Link>
+
+              <Link to='/dashboard?tab=delivery-details'>
+                <Sidebar.Item active={tab === 'delivery-details'} icon={FaTruck} as='div'>
+                   Deliveries
                 </Sidebar.Item>
               </Link>
             </>

@@ -6,7 +6,7 @@ import { useSelector } from "react-redux";
 
 const dummyData = Array.from({ length: 30 }, (_, index) => ({
   itemName: `Product ${index + 1}`,
-  price: (Math.random() * 50 + 10).toFixed(2), // Random price between 10 and 60
+  price: (Math.random() * 50 + 10).toFixed(2), 
   image: DummyImg,
   description: "test description",
   createdBy: `User ${Math.floor(Math.random() * 5) + 1}`,
@@ -28,7 +28,7 @@ const addToCart = async (product, userId) => {
     image: product.image,
     createdBy: product.createdBy,
     updatedBy: product.updatedBy,
-    description: product.description,
+    description: product.description, 
     category: product.category,
   };
 
@@ -38,7 +38,7 @@ const addToCart = async (product, userId) => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(cartItem),  // Send cart item with userId to the backend
+      body: JSON.stringify(cartItem),  
     });
 
     const data = await res.json();
@@ -75,7 +75,7 @@ const Products = () => {
                   <Button 
                     type="primary" 
                     icon={<AiOutlineShoppingCart />} 
-                    onClick={() => addToCart(product, userId)}  // Pass userId to addToCart function
+                    onClick={() => addToCart(product, userId)}  
                   >
                     Add to Cart
                   </Button>
@@ -83,7 +83,7 @@ const Products = () => {
               ]}
             >
               <Card.Meta
-                title={product.itemName}  // Product name
+                title={product.itemName}  
                 description={product.description}
               />
             </Card>
