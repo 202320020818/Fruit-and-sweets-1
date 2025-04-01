@@ -102,8 +102,24 @@ export default function DashSidebar() {
                   Feedback
                 </Sidebar.Item>
               </Link>
-
-
+              <Link to='/dashboard?tab=productList'>
+                <Sidebar.Item
+                  active={tab === 'productList'}
+                  icon={HiChatAlt2} // Feedback icon
+                  as='div'
+                >
+                  Product List
+                </Sidebar.Item>
+              </Link>
+              <Link to='/dashboard?tab=addProduct'>
+                <Sidebar.Item
+                  active={tab === 'addProduct'}
+                  icon={HiChatAlt2} // Feedback icon
+                  as='div'
+                >
+                 Add Product
+                </Sidebar.Item>
+              </Link>
               
               <Link to='/dashboard?tab=comments'>
                 <Sidebar.Item

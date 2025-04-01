@@ -8,6 +8,8 @@ import DashUsers from '../components/DashUsers';
 import DashComments from '../components/DashComments';
 import DashboardComp from '../components/DashboardComp';
 import FeedbackDashboard from './FeedbackDashboard';
+import ProductList from './ProductList'
+import AddProduct from './InsertProduct'
 
 import AdminDeliveryManagement from './AdminDeliveryManagement';
 
@@ -32,6 +34,8 @@ export default function Dashboard() {
       {tab === "posts" && <DashPosts />}
       {tab === "users" && <DashUsers />}
 
+      {tab=="productList"&& <ProductList />}
+      {tab=="addProduct"&& <AddProduct/>}
       {/* feedback */}
       {tab === "feedback" && <FeedbackDashboard />}
       {/* dashboard comp */}
