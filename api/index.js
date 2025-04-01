@@ -11,16 +11,11 @@ import cartRoutes from "./routes/cart.route.js";
 import paymentRoutes from "./routes/payment.route.js";
 import orderRoutes from "./routes/order.route.js";
 import feedbackRoutes from "./routes/feedback.route.js";
-import deliveryRoutes from "./routes/delivery.route.js";
-import orderRoutes from './routes/order.route.js';  
-import cookieParser from 'cookie-parser';
+import deliveryRoutes from "./routes/delivery.route.js"; 
 import admin from "./config/firebase.js";
-import cors from 'cors';
 import { stripeRawBodyMiddleware } from './middleware/stripeRawBoady.js';
 import inventoryRoutes from "./routes/inventory.route.js";
 
-import bodyParser from 'body-parser';
-import deliveryRoutes from "./routes/delivery.route.js"; 
 
 
 console.log("Delivery routes loaded");
@@ -38,7 +33,7 @@ const app = express();
 // ✅ Fix CORS Issue
 app.use(
   cors({
-    origin: "http://localhost:5173", // Explicitly allow frontend
+    origin: "http://localhost:5173", 
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
@@ -62,18 +57,15 @@ app.use("/api/user", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/payment", paymentRoutes);
-app.use("/api/order", orderRoutes);
-app.use('/api/cart', cartRoutes);
-app.use('/api/payment', paymentRoutes); 
-app.use('/api/order', orderRoutes); 
-app.use('/api/delivery', deliveryRoutes);// Order routes (e.g., fetching order details)
+app.use("/api/order", orderRoutes); 
+app.use('/api/delivery', deliveryRoutes);
 app.use("/api/inventory", inventoryRoutes);
 
 console.log("✅ Registering delivery routes...");
 app.use("/api/delivery", deliveryRoutes);
 app.use("/api/feedback", feedbackRoutes);
 
-// ✅ Error Handling Middleware
+
 app.use((err, req, res, next) => {
   res.status(err.statusCode || 500).json({
     success: false,
