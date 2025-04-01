@@ -7,7 +7,10 @@ import DashPosts from '../components/DashPosts';
 import DashUsers from '../components/DashUsers';
 import DashComments from '../components/DashComments';
 import DashboardComp from '../components/DashboardComp';
+import FeedbackDashboard from './FeedbackDashboard';
+
 import AdminDeliveryManagement from './AdminDeliveryManagement';
+
 
 
 export default function Dashboard() {
@@ -28,6 +31,13 @@ export default function Dashboard() {
       {tab === "profile" && <DashProfile />}
       {tab === "posts" && <DashPosts />}
       {tab === "users" && <DashUsers />}
+
+      {/* feedback */}
+      {tab === "feedback" && <FeedbackDashboard />}
+      {/* dashboard comp */}
+      {/* comments  */}
+
+
       {tab === "comments" && <DashComments />}
       {tab === "delivery-details" && <AdminDeliveryManagement />}
       {tab === "dash" && <DashboardComp />}

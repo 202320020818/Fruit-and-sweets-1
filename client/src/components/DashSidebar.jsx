@@ -6,6 +6,7 @@ import {
   HiOutlineUserGroup,
   HiAnnotation,
   HiChartPie,
+  HiChatAlt2, // Added feedback icon
 } from 'react-icons/hi';
 import { FaTruck } from 'react-icons/fa';
 import { useEffect, useState } from 'react';
@@ -90,6 +91,19 @@ export default function DashSidebar() {
                   Users
                 </Sidebar.Item>
               </Link>
+
+
+              <Link to='/dashboard?tab=feedback'>
+                <Sidebar.Item
+                  active={tab === 'feedback'}
+                  icon={HiChatAlt2} // Feedback icon
+                  as='div'
+                >
+                  Feedback
+                </Sidebar.Item>
+              </Link>
+
+
               
               <Link to='/dashboard?tab=comments'>
                 <Sidebar.Item

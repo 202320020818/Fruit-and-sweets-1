@@ -1,7 +1,11 @@
 import React from 'react';
 
-export default function About() {
+function About() {
   return (
+
+    <div>
+      
+=
     <div style={styles.container}>
       <div style={styles.inclinedBackground}></div> {/* Inclined background */}
       
@@ -60,8 +64,13 @@ export default function About() {
         </p>
       </div>
     </div>
+    </div>
   );
 }
+
+
+export default About
+
 
 const styles = {
   container: {

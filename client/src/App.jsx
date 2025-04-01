@@ -10,11 +10,19 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import PrivateRoute from './components/PrivateRoute';
 import CartPage from "./pages/CartPage";
+
+
+
+import FeedbackForm from "./pages/feedbackForm";
+
+
+
 import TrackOrderPage from "./pages/TrackOrderPage";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentFailed from "./pages/PaymentFailed";
 import OrderPage from './pages/OrderPage'; 
 import DeliveryDetails from './pages/DeliveryDetails'
+
 
 
 export default function App() {
@@ -33,7 +41,12 @@ export default function App() {
         <Route path="/products" element={<Products />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/payment-success" element={<PaymentSuccess />} />
+
+        <Route path="/order" element={<OrderPage />} /> {/* Order page route */}
+        <Route path="/feedback" element={<FeedbackForm />} />
+
         <Route path="/payment-failed" element={<PaymentFailed />} />
+
 
         <Route path="/myOrders" element={<OrderPage />} /> 
         <Route path="/myOrders" element={<OrderPage />} />

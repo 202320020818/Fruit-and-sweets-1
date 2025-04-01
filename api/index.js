@@ -1,10 +1,17 @@
 import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import bodyParser from "body-parser";
+
 import userRoutes from "./routes/user.route.js";
 import authRoutes from "./routes/auth.route.js";
 import cartRoutes from "./routes/cart.route.js";
 import paymentRoutes from "./routes/payment.route.js";
+import orderRoutes from "./routes/order.route.js";
+import feedbackRoutes from "./routes/feedback.route.js";
+import deliveryRoutes from "./routes/delivery.route.js";
 import orderRoutes from './routes/order.route.js';  
 import cookieParser from 'cookie-parser';
 import admin from "./config/firebase.js";
@@ -23,36 +30,39 @@ dotenv.config();
 
 mongoose
   .connect(process.env.MONGO)
-  .then(() => {
-    console.log("MongoDb is connected");
-  })
-  .catch((error) => {
-    console.log(error);
-  });
+  .then(() => console.log("MongoDB connected"))
+  .catch((error) => console.log(error));
 
-  
 const app = express();
-app.use(cors({
-  origin: process.env.CLIENT_URL, 
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true,  
-}));
 
-// Middleware to set Cross-Origin-Opener-Policy header
-app.use((req, res, next) => {
-  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
-  next();
-});
-app.post('/api/payment/stripe-webhook', bodyParser.raw({ type: 'application/json' }));
+// ✅ Fix CORS Issue
+app.use(
+  cors({
+    origin: "http://localhost:5173", // Explicitly allow frontend
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
 
+// ✅ Handle Preflight Requests
+app.options("*", cors());
+
+// ✅ Middleware Order Matters!
 app.use(express.json());
 app.use(cookieParser());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
+// ✅ Serve Static Files
+app.use("/uploads", express.static("uploads"));
 
-
-// Routes for user, authentication, cart, payment, and orders,delivery
+// ✅ Routes
 app.use("/api/user", userRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/cart", cartRoutes);
+app.use("/api/payment", paymentRoutes);
+app.use("/api/order", orderRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/payment', paymentRoutes); 
 app.use('/api/order', orderRoutes); 
@@ -61,20 +71,18 @@ app.use("/api/inventory", inventoryRoutes);
 
 console.log("✅ Registering delivery routes...");
 app.use("/api/delivery", deliveryRoutes);
-console.log("✅ Delivery routes mounted correctly!");
+app.use("/api/feedback", feedbackRoutes);
 
-app.listen(3000, () => {
-  console.log("Server is running on port 3000!!!");
-});
-
-// Error handling middleware
+// ✅ Error Handling Middleware
 app.use((err, req, res, next) => {
-  const statusCode = err.statusCode || 500;
-  const message = err.message || "Internal Server Error";
-  res.status(statusCode).json({
+  res.status(err.statusCode || 500).json({
     success: false,
-    statusCode,
-    message,
+    statusCode: err.statusCode || 500,
+    message: err.message || "Internal Server Error",
   });
 });
 
+// ✅ Start Server
+app.listen(3000, () => {
+  console.log("Server is running on port 3000");
+});

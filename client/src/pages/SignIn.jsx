@@ -22,6 +22,7 @@ export default function SignIn() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!formData.email || !formData.password) {
       return dispatch(signInFailure("Please fill all the fields"));
     }
@@ -72,7 +73,9 @@ export default function SignIn() {
                 placeholder="harshanaeshan2002@gmail.com"
                 id="email"
                 onChange={handleChange}
+                
               />
+              
             </div>
             <div>
               <Label value="Your password" />
