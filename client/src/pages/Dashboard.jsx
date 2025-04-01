@@ -1,13 +1,19 @@
 import React from "react";
 import { useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
-import DashSidebar from "../components/DashSidebar";
-import DashProfile from "../components/DashProfile";
-import DashPosts from "../components/DashPosts";
-import DashUsers from "../components/DashUsers";
-import DashComments from "../components/DashComments";
-import DashboardComp from "../components/DashboardComp";
-import Feedback from "./Feedback"; //import feedcase correct
+import DashSidebar from '../components/DashSidebar';
+import DashProfile from '../components/DashProfile';
+import DashPosts from '../components/DashPosts';
+import DashUsers from '../components/DashUsers';
+import DashComments from '../components/DashComments';
+import DashboardComp from '../components/DashboardComp';
+import FeedbackDashboard from './FeedbackDashboard';
+import ProductList from './ProductList'
+import AddProduct from './InsertProduct'
+
+import AdminDeliveryManagement from './AdminDeliveryManagement';
+
+
 
 export default function Dashboard() {
   const location = useLocation();
@@ -23,18 +29,22 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
       <div className="md:w-56">
-        {/* Sidebar */}
         <DashSidebar />
       </div>
-      {/* profile... */}
       {tab === "profile" && <DashProfile />}
-      {/* posts... */}
       {tab === "posts" && <DashPosts />}
-      {/* users */}
       {tab === "users" && <DashUsers />}
-      {/* comments  */}
-      {tab === "comments" && <DashComments />}
+
+      {tab=="productList"&& <ProductList />}
+      {tab=="addProduct"&& <AddProduct/>}
+      {/* feedback */}
+      {tab === "feedback" && <FeedbackDashboard />}
       {/* dashboard comp */}
+      {/* comments  */}
+
+
+      {tab === "comments" && <DashComments />}
+      {tab === "delivery-details" && <AdminDeliveryManagement />}
       {tab === "dash" && <DashboardComp />}
       {/* Render the feedback page  correct*/}
       {tab === "feedback" && <Feedback />}

@@ -90,6 +90,10 @@ export default function Header() {
               <Dropdown.Item>Profile</Dropdown.Item>
             </Link>
             <Dropdown.Divider />
+            <Link to={"/myOrders"}>
+              <Dropdown.Item>My Orders</Dropdown.Item>
+            </Link>
+            <Dropdown.Divider />
             <Dropdown.Item onClick={handleSignout}>Sign out</Dropdown.Item>
             {/* drop down done*/}
           </Dropdown>

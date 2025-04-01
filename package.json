@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon api/index.js",
-    "start": "node api/index.js"
+    "start": "nodemon api/index.js"
   },
   "keywords": [],
   "author": "",
@@ -21,7 +21,9 @@
     "firebase": "^11.5.0",
     "firebase-admin": "^13.2.0",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.12.1",
+    "jspdf-autotable": "^5.0.2",
+    "mongoose": "^8.12.8",
+    "multer": "^1.4.5-lts.2",
     "nodemailer": "^6.10.0",
     "nodemon": "^3.1.9",
     "react": "^18.3.1",
