@@ -1,4 +1,4 @@
-import { Sidebar } from 'flowbite-react';
+import { Sidebar } from "flowbite-react";
 import {
   HiUser,
   HiArrowSmRight,
@@ -22,7 +22,7 @@ export default function DashSidebar() {
 
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
-    const tabFromUrl = urlParams.get('tab');
+    const tabFromUrl = urlParams.get("tab");
     if (tabFromUrl) {
       setTab(tabFromUrl);
     }
@@ -43,7 +43,7 @@ export default function DashSidebar() {
   };
 
   return (
-    <Sidebar className='w-full md:w-56'>
+    <Sidebar className="w-full md:w-56">
       <Sidebar.Items>
         <Sidebar.ItemGroup className='flex flex-col gap-1'>
 
@@ -63,9 +63,9 @@ export default function DashSidebar() {
             <Sidebar.Item
               className={`hover:bg-gray-200 ${tab === 'profile' ? 'bg-gray-300' : ''}`}
               icon={HiUser}
-              label={currentUser.isAdmin ? 'Admin' : 'User'}
-              labelColor='dark'
-              as='div'
+              label={currentUser.isAdmin ? "Admin" : "User"}
+              labelColor="dark"
+              as="div"
             >
               Profile
             </Sidebar.Item>

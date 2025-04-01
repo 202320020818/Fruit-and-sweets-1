@@ -9,13 +9,14 @@ import Dashboard from "./pages/Dashboard";
 import Products from "./pages/Products";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
-import PrivateRoute from './components/PrivateRoute';
+import PrivateRoute from "./components/PrivateRoute";
 import CartPage from "./pages/CartPage";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import OrderPage from "./pages/OrderPage"; // Import OrderPage component
+import Feedback from "./pages/Feedback"; //import feedcase correct
 import FeedbackForm from "./pages/feedbackForm";
 import TrackOrderPage from "./pages/TrackOrderPage";
-import PaymentSuccess from "./pages/PaymentSuccess";
-import PaymentFailed from "./pages/PaymentFailed";
-import OrderPage from './pages/OrderPage'; 
+import PaymentFailed from "./pages/PaymentFailed";; 
 import DeliveryDetails from './pages/DeliveryDetails'
 
 import { ToastContainer } from "react-toastify";
@@ -34,12 +35,17 @@ export default function App() {
         <Route path="/sign-in" element={<SignIn />} />
         <Route path="/sign-up" element={<SignUp />} />
         <Route element={<PrivateRoute />}>
-          <Route path='/dashboard' element={<Dashboard />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+         
         </Route>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/products" element={<Products />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/payment-success" element={<PaymentSuccess />} />
+        <Route path="/order" element={<OrderPage />} /> {/* Order page route */}
+        <Route path="/feedback" element={<Feedback />} /> {/**correct */}
+       
+        
         <Route path="/order" element={<OrderPage />} /> 
         <Route path="/feedback" element={<FeedbackForm />} />
         <Route path="/payment-failed" element={<PaymentFailed />} />
