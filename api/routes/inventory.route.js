@@ -26,7 +26,7 @@ router.post("/", upload.single("image"), async (req, res) => {
   try {
     const { name, description, category, price, quantity } = req.body;
     const imagePath = req.file ? `/uploads/${req.file.filename}` : ""; 
-    const product_ID = crypto.randomUUID();
+    const product_ID = randomUUID();
 
     // Validate input fields
     if (!product_ID || !name || !description || !category || !price || !quantity || !imagePath) {

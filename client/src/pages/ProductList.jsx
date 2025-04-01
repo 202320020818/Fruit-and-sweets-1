@@ -25,7 +25,7 @@ const ProductList = () => {
     axios
       .get("http://localhost:3000/api/inventory")
       .then((res) => setInventory(res.data))
-      .catch(() => message.error("Failed to load inventory."));
+      .catch(() => toast.error("Failed to load inventory."));
   }, []);
 
   const onDeleteClick = (id) => {
@@ -33,9 +33,9 @@ const ProductList = () => {
       .delete(`http://localhost:3000/api/inventory/${id}`)
       .then(() => {
         setInventory((prev) => prev.filter((item) => item._id !== id));
-        message.success("Product deleted successfully!");
+        toast.success("Product deleted successfully!");
       })
-      .catch(() => message.error("Error deleting product."));
+      .catch(() => toast.error("Error deleting product."));
   };
 
   const showDetailsModal = (product) => {
@@ -192,6 +192,13 @@ const ProductList = () => {
               <Option value="fruit">Fruits</Option>
               <Option value="sweet">Sweets</Option>
             </Select>
+            <Form.Item name="price" label="Price" rules={[{ required: true, message: "Please enter the price" }]}>
+            <Input type="number"   className={styles["ant-input"]}/>
+          </Form.Item>
+          <Form.Item name="quantity" label="Quantity" rules={[{ required: true, message: "Please enter the quantity" }]}>
+            <Input type="number"  className={styles["ant-input"]} />
+          </Form.Item>
+          
           </Form.Item>
         </Form>
       </Modal>
