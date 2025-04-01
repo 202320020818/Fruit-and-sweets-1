@@ -8,7 +8,7 @@ import {
   signInSuccess,
   signInFailure,
 } from "../redux/user/userSlice";
-import OAuth from '../components/OAuth';
+import OAuth from "../components/OAuth";
 
 export default function SignIn() {
   const [formData, setFormData] = useState({});
@@ -18,12 +18,23 @@ export default function SignIn() {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value.trim() });
+    // Clear error message when user starts typing
+    if (errorMessage) {
+      dispatch(signInFailure(null));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Check for empty fields
     if (!formData.email || !formData.password) {
       return dispatch(signInFailure("Please fill all the fields"));
+    }
+    // Email validation regex
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      return dispatch(signInFailure("Please enter a valid email address"));
     }
     try {
       dispatch(signInStart());
@@ -36,7 +47,7 @@ export default function SignIn() {
       if (data.success === false) {
         dispatch(signInFailure(data.message));
       }
-      
+
       if (res.ok) {
         dispatch(signInSuccess(data));
         navigate("/");
@@ -55,7 +66,7 @@ export default function SignIn() {
             <span className="px-2 py-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-lg text-white">
               Fruit's{" "}
             </span>
-            & sweets
+            & sweets{/**/}
           </Link>
           <p className="text-sm mt-5">
             You can sign in with your email and password or with Google
@@ -72,7 +83,7 @@ export default function SignIn() {
                 placeholder="harshanaeshan2002@gmail.com"
                 id="email"
                 onChange={handleChange}
-              />
+              />         
             </div>
             <div>
               <Label value="Your password" />

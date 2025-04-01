@@ -91,6 +91,7 @@ export default function Header() {
             </Link>
             <Dropdown.Divider />
             <Dropdown.Item onClick={handleSignout}>Sign out</Dropdown.Item>
+            {/* drop down done*/}
           </Dropdown>
         ) : (
           <Link to="/sign-in">
@@ -110,6 +111,9 @@ export default function Header() {
         </Navbar.Link>
         <Navbar.Link active={path === "/projects"} as={"div"}>
           <Link to="/projects">Products</Link>
+        </Navbar.Link>
+        <Navbar.Link active={path === "/feedback"} as={"div"}>
+          <Link to="/feedback">Feedback</Link>
         </Navbar.Link>
       </Navbar.Collapse>
     </Navbar>
