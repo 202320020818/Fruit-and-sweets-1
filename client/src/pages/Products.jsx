@@ -43,7 +43,7 @@ const Products = () => {
 
     const cartItem = {
       userId,
-      itemName: product.itemName,
+      itemName: product.name,
       price: product.price,
       image: product.image,
       createdBy: product.createdBy,

@@ -15,6 +15,7 @@ import deliveryRoutes from "./routes/delivery.route.js";
 import admin from "./config/firebase.js";
 import { stripeRawBodyMiddleware } from './middleware/stripeRawBoady.js';
 import inventoryRoutes from "./routes/inventory.route.js";
+import wishlistRoutes from './routes/wishlist.route.js';
 
 
 
@@ -60,6 +61,7 @@ app.use("/api/payment", paymentRoutes);
 app.use("/api/order", orderRoutes); 
 app.use('/api/delivery', deliveryRoutes);
 app.use("/api/inventory", inventoryRoutes);
+app.use('/api/wishlist', wishlistRoutes);
 
 console.log("✅ Registering delivery routes...");
 app.use("/api/delivery", deliveryRoutes);

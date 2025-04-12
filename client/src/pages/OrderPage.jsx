@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Table, Card, Typography, Button, InputNumber } from 'antd';
-import { EyeOutlined } from '@ant-design/icons';
+import { EyeOutlined, DownloadOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const { Title } = Typography;
 
@@ -12,7 +14,6 @@ export default function OrderPage() {
   const [orders, setOrders] = useState([]);
   const navigate = useNavigate();
 
-  // Fetch orders when component mounts or userId changes
   useEffect(() => {
     if (userId) {
       const fetchOrders = async () => {
@@ -32,18 +33,49 @@ export default function OrderPage() {
     }
   }, [userId]);
 
-  // Calculate total price for each order
   const calculateOrderTotal = (items) => {
     return items.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2);
   };
 
-  // Handle Track Order click event
   const handleTrackOrderClick = (orderId) => {
-    console.log('Tracking order:', orderId);
     navigate(`/trackOrder/${orderId}`);
   };
 
-  // Define columns for the order table
+  const handleQuantityChange = (value, record, type) => {
+    const updatedOrders = [...orders];
+    if (type === 'item') {
+      const orderIndex = updatedOrders.findIndex(order => order.orderId === record.orderId);
+      const itemIndex = updatedOrders[orderIndex].items.findIndex(item => item._id === record._id);
+      updatedOrders[orderIndex].items[itemIndex].quantity = value;
+    }
+    setOrders(updatedOrders);
+  };
+
+  // 📄 Generate and download PDF for a given order
+  const downloadOrderPDF = (order) => {
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text(`Order Details - ${order.orderId}`, 14, 20);
+    doc.setFontSize(12);
+    doc.text(`Customer: ${currentUser?.username || 'N/A'}`, 14, 28);
+    doc.text(`Total Price: Rs ${calculateOrderTotal(order.items)}`, 14, 36);
+
+    const tableData = order.items.map((item) => [
+      item.name,
+      `Rs ${item.price.toFixed(2)}`,
+      item.quantity,
+      `Rs ${(item.price * item.quantity).toFixed(2)}`
+    ]);
+
+    doc.autoTable({
+      startY: 45,
+      head: [['Item Name', 'Unit Price', 'Quantity', 'Total Price']],
+      body: tableData,
+    });
+
+    doc.save(`Order_${order.orderId}.pdf`);
+  };
+
   const columns = [
     {
       title: 'Order ID',
@@ -59,18 +91,27 @@ export default function OrderPage() {
       title: 'Actions',
       key: 'actions',
       render: (text, record) => (
-        <Button
-          type="primary"
-          icon={<EyeOutlined />}
-          onClick={() => handleTrackOrderClick(record.orderId)} 
-        >
-          Track Order
-        </Button>
+        <>
+          <Button
+            type="primary"
+            icon={<EyeOutlined />}
+            onClick={() => handleTrackOrderClick(record.orderId)}
+            style={{ marginRight: 8 }}
+          >
+            Track
+          </Button>
+          <Button
+            type="default"
+            icon={<DownloadOutlined />}
+            onClick={() => downloadOrderPDF(record)}
+          >
+            PDF
+          </Button>
+        </>
       ),
     },
   ];
 
-  // Define columns for the items in each order
   const itemColumns = [
     {
       title: 'Item Name',
@@ -81,7 +122,7 @@ export default function OrderPage() {
       title: 'Unit Price',
       dataIndex: 'price',
       key: 'price',
-      render: (text) => `$${text.toFixed(2)}`,
+      render: (text) => `Rs ${text.toFixed(2)}`,
     },
     {
       title: 'Quantity',
@@ -98,20 +139,9 @@ export default function OrderPage() {
     {
       title: 'Total Price',
       key: 'totalPrice',
-      render: (text, record) => `$${(record.price * record.quantity).toFixed(2)}`,
+      render: (text, record) => `Rs ${(record.price * record.quantity).toFixed(2)}`,
     },
   ];
-
-  // Handle quantity change for an item
-  const handleQuantityChange = (value, record, type) => {
-    const updatedOrders = [...orders];
-    if (type === 'item') {
-      const orderIndex = updatedOrders.findIndex(order => order.orderId === record.orderId);
-      const itemIndex = updatedOrders[orderIndex].items.findIndex(item => item._id === record._id);
-      updatedOrders[orderIndex].items[itemIndex].quantity = value;
-    }
-    setOrders(updatedOrders);
-  };
 
   return (
     <div style={{ padding: '20px', backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
