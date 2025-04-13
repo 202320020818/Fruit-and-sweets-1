@@ -13,11 +13,12 @@ import PrivateRoute from "./components/PrivateRoute";
 import CartPage from "./pages/CartPage";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import OrderPage from "./pages/OrderPage"; // Import OrderPage component
-import Feedback from "./pages/Feedback"; //import feedcase correct
+import Feedback from "./pages/Feedback"; // Corrected import for Feedback
 import FeedbackForm from "./pages/feedbackForm";
 import TrackOrderPage from "./pages/TrackOrderPage";
-import PaymentFailed from "./pages/PaymentFailed";; 
-import DeliveryDetails from './pages/DeliveryDetails'
+import PaymentFailed from "./pages/PaymentFailed";
+import DeliveryDetails from './pages/DeliveryDetails';
+import BankSlipUpload from './pages/BankSlipUpload'; // ✅ Corrected path
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -36,22 +37,20 @@ export default function App() {
         <Route path="/sign-up" element={<SignUp />} />
         <Route element={<PrivateRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
-         
         </Route>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/products" element={<Products />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/payment-success" element={<PaymentSuccess />} />
         <Route path="/order" element={<OrderPage />} /> {/* Order page route */}
-        <Route path="/feedback" element={<Feedback />} /> {/**correct */}
-       
-        
-        <Route path="/order" element={<OrderPage />} /> 
-        <Route path="/feedback" element={<FeedbackForm />} />
+        <Route path="/feedback" element={<Feedback />} /> {/* Corrected route for Feedback */}
+        <Route path="/feedback-form" element={<FeedbackForm />} /> {/* Feedback Form route */}
         <Route path="/payment-failed" element={<PaymentFailed />} />
-        <Route path="/myOrders" element={<OrderPage />} /> 
+        <Route path="/myOrders" element={<OrderPage />} />
         <Route path="/trackOrder/:orderId" element={<TrackOrderPage />} />
         <Route path="/orders/deliveryDetails" element={<DeliveryDetails />} />
+        <Route path="/bankslip-upload" element={<BankSlipUpload />} /> {/* New Bank Slip Upload route */}
+        
       </Routes>
       <Footer />
     </BrowserRouter>
