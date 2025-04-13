@@ -5,7 +5,7 @@
   background-color: #ffffff; /* Clean white background */
   border-radius: 15px; /* Slightly rounded corners */
   box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.1); /* Softer shadow */
-  font-family: 'Arial', sans-serif;
+  font-family: "Arial", sans-serif;
 }
 
 h2 {
@@ -27,7 +27,9 @@ label {
   font-size: 16px;
 }
 
-input, select, textarea {
+input,
+select,
+textarea {
   padding: 14px;
   border: 2px solid #3498db; /* Thicker blue border */
   border-radius: 10px;
@@ -41,7 +43,7 @@ textarea {
 }
 
 button {
-  background-color: #007bff; /* Bootstrap Blue */
+  background-color: #70777e6c; /* Bootstrap Blue */
   color: white;
   border: none;
   padding: 14px;
@@ -54,7 +56,7 @@ button {
 }
 
 button:hover {
-  background-color: #0056b3; /* Darker blue on hover */
+  background-color: #494d52; /* Darker blue on hover */
   transform: scale(1.05); /* Slight hover effect */
 }
 
