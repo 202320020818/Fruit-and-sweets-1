@@ -51,6 +51,9 @@ export default function App() {
         <Route path="/orders/deliveryDetails" element={<DeliveryDetails />} />
         <Route path="/bankslip-upload" element={<BankSlipUpload />} /> {/* New Bank Slip Upload route */}
         
+
+
+        
       </Routes>
       <Footer />
     </BrowserRouter>
