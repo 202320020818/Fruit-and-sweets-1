@@ -12,6 +12,7 @@ import ProductList from './ProductList'
 import AddProduct from './InsertProduct'
 
 import AdminDeliveryManagement from './AdminDeliveryManagement';
+import Feedback from './Feedback'; // ✅ Add this if using <Feedback />
 
 
 
@@ -44,6 +45,7 @@ export default function Dashboard() {
 
 
       {tab === "comments" && <DashComments />}
+      
       {tab === "delivery-details" && <AdminDeliveryManagement />}
       {tab === "dash" && <DashboardComp />}
       {/* Render the feedback page  correct*/}

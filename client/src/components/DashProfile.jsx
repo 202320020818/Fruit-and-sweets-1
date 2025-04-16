@@ -1,11 +1,11 @@
+import { Alert, Button, Modal, ModalBody, TextInput } from "flowbite-react";
+import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
-import { Alert, Button, TextInput, Modal, ModalBody } from "flowbite-react";
-import { useState, useRef, useEffect } from "react";
 import {
+  getDownloadURL,
   getStorage,
   ref,
   uploadBytesResumable,
-  getDownloadURL,
 } from "firebase/storage";
 import { app } from "../firebase";
 import { CircularProgressbar } from "react-circular-progressbar";
@@ -21,9 +21,11 @@ import {
 } from "../redux/user/userSlice";
 import { useDispatch } from "react-redux";
 import { HiOutlineExclamationCircle } from "react-icons/hi";
+import { Link, useNavigate } from "react-router-dom";
+
 
 export default function DashProfile() {
-  const { currentUser, error } = useSelector((state) => state.user);
+  const { currentUser, error, loading } = useSelector((state) => state.user);
   const [imageFile, setImageFile] = useState(null);
   const [imageFileUrl, setImageFileUrl] = useState(null);
   const [imageFileUploadProgress, setImageFileUploadProgress] = useState(null);
@@ -35,7 +37,7 @@ export default function DashProfile() {
   const [formData, setFormData] = useState({});
   const filePickerRef = useRef();
   const dispatch = useDispatch();
-
+  const navigate = useNavigate();
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -50,18 +52,15 @@ export default function DashProfile() {
   }, [imageFile]);
 
   const uploadImage = async () => {
-    //craft rules base on data in your Firestore database
-    //allow write: if firestore.get(
-    //   /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin;
-    //service firebase.storage {
-    //match /b/{bucket}/o {
-    //match /{allPaths=**} {
-    //allow read;
-    //allow write: if
-    //request.resource.size < 2 * 1024 * 1024 &&
-    //request.resource.contentType.matches('image/.*')
-    //}
-    //}
+    // service firebase.storage {
+    //   match /b/{bucket}/o {
+    //     match /{allPaths=**} {
+    //       allow read;
+    //       allow write: if
+    //       request.resource.size < 2 * 1024 * 1024 &&
+    //       request.resource.contentType.matches('image/.*')
+    //     }
+    //   }
     // }
     setImageFileUploading(true);
     setImageFileUploadError(null);
@@ -69,7 +68,6 @@ export default function DashProfile() {
     const fileName = new Date().getTime() + imageFile.name;
     const storageRef = ref(storage, fileName);
     const uploadTask = uploadBytesResumable(storageRef, imageFile);
-
     uploadTask.on(
       "state_changed",
       (snapshot) => {
@@ -105,7 +103,6 @@ export default function DashProfile() {
     e.preventDefault();
     setUpdateUserError(null);
     setUpdateUserSuccess(null);
-
     if (Object.keys(formData).length === 0) {
       setUpdateUserError("No changes made");
       return;
@@ -114,7 +111,6 @@ export default function DashProfile() {
       setUpdateUserError("Please wait for image to upload");
       return;
     }
-
     try {
       dispatch(updateStart());
       const res = await fetch(`/api/user/update/${currentUser._id}`, {
@@ -137,7 +133,6 @@ export default function DashProfile() {
       setUpdateUserError(error.message);
     }
   };
-
   const handleDeleteUser = async () => {
     setShowModal(false);
     try {
@@ -150,8 +145,6 @@ export default function DashProfile() {
         dispatch(deleteUserFailure(data.message));
       } else {
         dispatch(deleteUserSuccess(data));
-        alert("Your account has been deleted successfully."); // Show a confirmation message
-        window.location.href = "/"; // Redirect to the homepage after deletion
       }
     } catch (error) {
       dispatch(deleteUserFailure(error.message));
@@ -173,7 +166,6 @@ export default function DashProfile() {
       console.log(error.message);
     }
   };
-
   return (
     <div className="max-w-lg mx-auto p-3 w-full">
       <h1 className="my-7 text-center font-semibold text-3xl">Profile</h1>
@@ -212,7 +204,7 @@ export default function DashProfile() {
           )}
           <img
             src={imageFileUrl || currentUser.profilePicture}
-            alt="Profile"
+            alt="user"
             className={`rounded-full w-full h-full object-cover border-8 border-[lightgray] ${
               imageFileUploadProgress &&
               imageFileUploadProgress < 100 &&
@@ -223,7 +215,6 @@ export default function DashProfile() {
         {imageFileUploadError && (
           <Alert color="failure">{imageFileUploadError}</Alert>
         )}
-
         <TextInput
           type="text"
           id="username"
@@ -244,11 +235,24 @@ export default function DashProfile() {
           placeholder="password"
           onChange={handleChange}
         />
-        <Button type="submit" gradientDuoTone="pinkToOrange" outline>
-          {/*<Button type="submit" gradientDuoTone="cyanToLime" outline>*/}
-          {" "}
-          Update
+        <Button
+          type="submit"
+          gradientDuoTone="purpleToBlue"
+          outline
+          disabled={loading || imageFileUploading}
+        >
+          {loading ? "Loading..." : "Update"}
         </Button>
+        
+        <Button
+          type="button"
+          gradientDuoTone="purpleToPink"
+          className="w-full"
+          onClick={() => navigate('/create-post')}
+        >
+          Create a post
+        </Button>
+      
       </form>
       <div className="text-red-500 flex justify-between mt-5">
         <span onClick={() => setShowModal(true)} className="cursor-pointer">
@@ -261,11 +265,6 @@ export default function DashProfile() {
       {updateUserSuccess && (
         <Alert color="success" className="mt-5">
           {updateUserSuccess}
-        </Alert>
-      )}
-      {updateUserError && (
-        <Alert color="failure" className="mt-5">
-          {updateUserError}
         </Alert>
       )}
       {updateUserError && (
