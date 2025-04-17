@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import { ToastContainer, toast } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function DashPosts() {
   const [posts, setPosts] = useState([]);
@@ -19,6 +21,7 @@ export default function DashPosts() {
     updated.splice(indexToDelete, 1);
     setPosts(updated);
     localStorage.setItem("posts", JSON.stringify([...updated].reverse()));
+    toast.success("Post deleted successfully!");
   };
 
   const startEdit = (index) => {
@@ -38,10 +41,13 @@ export default function DashPosts() {
     setPosts(updated);
     localStorage.setItem("posts", JSON.stringify([...updated].reverse()));
     setEditingIndex(null);
+    toast.success("Post updated successfully!");
   };
 
   return (
     <div className="p-4 bg-white text-black dark:bg-[#0f172a] dark:text-white min-h-screen">
+      <ToastContainer position="top-right" autoClose={3000} />
+
       {/* Centered Title */}
       <div className="flex justify-center">
         <h1 className="text-3xl font-bold mb-8">Dashboard Posts</h1>
@@ -137,7 +143,10 @@ export default function DashPosts() {
                       {post.description}
                     </p>
                     <p className="text-xs text-gray-400 dark:text-gray-400 mb-2">
-                      Posted on {new Date(post.createdAt).toLocaleString()}
+                      Posted on{" "}
+                      {post.createdAt
+                        ? new Date(post.createdAt).toLocaleString()
+                        : "Unknown"}
                     </p>
                     <div className="flex gap-2">
                       <button
