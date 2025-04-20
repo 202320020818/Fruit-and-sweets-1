@@ -11,12 +11,17 @@ const AdminDeliveryManagement = () => {
       try {
         const response = await fetch("http://localhost:3000/api/delivery");
         if (response.ok) {
-          const data = await response.json();
-          setDeliveries(data);
+          const result = await response.json();
+          if (result.success) {
+            setDeliveries(result.data || []);
+          } else {
+            setError(result.message || "Failed to fetch deliveries.");
+          }
         } else {
           setError("Failed to fetch deliveries.");
         }
       } catch (err) {
+        console.error("Error fetching deliveries:", err);
         setError("Error fetching data!");
       } finally {
         setLoading(false);

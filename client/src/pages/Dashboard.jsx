@@ -6,15 +6,15 @@ import DashProfile from '../components/DashProfile';
 import DashPosts from '../components/DashPosts';
 import DashUsers from '../components/DashUsers';
 import DashComments from '../components/DashComments';
-import DashboardComp from '../components/DashboardComp';
+import DashboardOverview from '../components/DashboardOverview';
 import FeedbackDashboard from './FeedbackDashboard';
 import ProductList from './ProductList'
 import AddProduct from './InsertProduct'
-
 import AdminDeliveryManagement from './AdminDeliveryManagement';
-import Feedback from './Feedback'; // ✅ Add this if using <Feedback />
-
-
+import Feedback from './Feedback';
+import AdminOrders from './AdminOrders';
+import DashDeliveries from '../components/DashDeliveries';
+import UserOrders from '../components/UserOrders';
 
 export default function Dashboard() {
   const location = useLocation();
@@ -27,6 +27,7 @@ export default function Dashboard() {
       setTab(tabFromUrl);
     }
   }, [location.search]);
+
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
       <div className="md:w-56">
@@ -35,21 +36,16 @@ export default function Dashboard() {
       {tab === "profile" && <DashProfile />}
       {tab === "posts" && <DashPosts />}
       {tab === "users" && <DashUsers />}
-
-      {tab=="productList"&& <ProductList />}
-      {tab=="addProduct"&& <AddProduct/>}
-      {/* feedback */}
+      {tab === "productList" && <ProductList />}
+      {tab === "addProduct" && <AddProduct/>}
       {tab === "feedback" && <FeedbackDashboard />}
-      {/* dashboard comp */}
-      {/* comments  */}
-
-
       {tab === "comments" && <DashComments />}
-      
       {tab === "delivery-details" && <AdminDeliveryManagement />}
-      {tab === "dash" && <DashboardComp />}
-      {/* Render the feedback page  correct*/}
+      {tab === "dash" && <DashboardOverview />}
       {tab === "feedback" && <Feedback />}
+      {tab === "orders" && <AdminOrders />}
+      {tab === "my-orders" && <UserOrders />}
+      {tab === "my-deliveries" && <DashDeliveries />}
     </div>
   );
 }

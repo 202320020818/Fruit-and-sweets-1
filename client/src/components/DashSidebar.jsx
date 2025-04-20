@@ -7,6 +7,8 @@ import {
   HiAnnotation,
   HiChartPie,
   HiChatAlt2,
+  HiShoppingCart,
+  HiTruck
 } from "react-icons/hi";
 import { FaPlusSquare, FaList, FaTruck, FaBoxOpen } from "react-icons/fa";
 import { useEffect, useState } from "react";
@@ -85,6 +87,34 @@ export default function DashSidebar() {
               Posts
             </Sidebar.Item>
           </Link>
+
+          {!currentUser.isAdmin && (
+            <>
+              <Link to="/dashboard?tab=my-orders">
+                <Sidebar.Item
+                  className={`hover:bg-gray-200 ${
+                    tab === "my-orders" ? "bg-gray-300" : ""
+                  }`}
+                  icon={HiShoppingCart}
+                  as="div"
+                >
+                  My Orders
+                </Sidebar.Item>
+              </Link>
+
+              <Link to="/dashboard?tab=my-deliveries">
+                <Sidebar.Item
+                  className={`hover:bg-gray-200 ${
+                    tab === "my-deliveries" ? "bg-gray-300" : ""
+                  }`}
+                  icon={HiTruck}
+                  as="div"
+                >
+                  My Deliveries
+                </Sidebar.Item>
+              </Link>
+            </>
+          )}
 
           {currentUser.isAdmin && (
             <>
@@ -166,6 +196,18 @@ export default function DashSidebar() {
                   as="div"
                 >
                   Deliveries
+                </Sidebar.Item>
+              </Link>
+
+              <Link to="/dashboard?tab=orders">
+                <Sidebar.Item
+                  className={`hover:bg-gray-200 ${
+                    tab === "orders" ? "bg-gray-300" : ""
+                  }`}
+                  icon={HiShoppingCart}
+                  as="div"
+                >
+                  Orders
                 </Sidebar.Item>
               </Link>
             </>

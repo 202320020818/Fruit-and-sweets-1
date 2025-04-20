@@ -1,105 +1,263 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { Card, Button } from "flowbite-react";
-import { PDFDownloadLink } from "@react-pdf/renderer";
-import { Page, Text, View, Document, StyleSheet } from "@react-pdf/renderer";
-
-const styles = StyleSheet.create({
-  page: { padding: 20 },
-  section: { marginBottom: 10 },
-  title: { fontSize: 20, fontWeight: "bold", marginBottom: 5 },
-  text: { fontSize: 14, marginBottom: 2 },
-});
-
-const DashboardPDF = ({ user, totalOrders, pendingOrders, activity }) => (
-  <Document>
-    <Page size="A4" style={styles.page}>
-      <View style={styles.section}>
-        <Text style={styles.title}>Dashboard Report</Text>
-      </View>
-      <View style={styles.section}>
-        <Text style={styles.title}>User Profile</Text>
-        <Text style={styles.text}>Username: {user?.username || "N/A"}</Text>
-        <Text style={styles.text}>Email: {user?.email || "N/A"}</Text>
-      </View>
-      <View style={styles.section}>
-        <Text style={styles.title}>Statistics</Text>
-        <Text style={styles.text}>Total Orders: {totalOrders}</Text>
-        <Text style={styles.text}>Pending Orders: {pendingOrders}</Text>
-      </View>
-      <View style={styles.section}>
-        <Text style={styles.title}>Recent Activity</Text>
-        {activity.map((item, index) => (
-          <Text key={index} style={styles.text}>{item}</Text>
-        ))}
-      </View>
-    </Page>
-  </Document>
-);
+import { Card, Button, Table, Row, Col, Statistic } from "flowbite-react";
+import { useNavigate } from 'react-router-dom';
+import { 
+  HiOutlineShoppingCart, 
+  HiOutlineCurrencyDollar, 
+  HiOutlineUserGroup,
+  HiOutlineChartBar,
+  HiOutlineExclamationCircle,
+  HiOutlineClipboardList
+} from "react-icons/hi";
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
+  ResponsiveContainer,
+  LineChart,
+  Line
+} from "recharts";
+import { generateAllOrdersPDF, generateProductListPDF } from '../utils/pdfService';
 
 export default function DashboardComp() {
   const { currentUser } = useSelector((state) => state.user) || {};
-  const totalOrders = 12;
-  const pendingOrders = 2;
-  const activity = [
-    "✔ Order #1234 delivered successfully",
-    "✔ Profile updated",
-    "❌ Payment failed for Order #1256",
-  ];
+  const navigate = useNavigate();
+  const [stats, setStats] = useState({
+    totalOrders: 0,
+    pendingOrders: 0,
+    totalRevenue: 0,
+    totalCustomers: 0
+  });
+  const [recentOrders, setRecentOrders] = useState([]);
+  const [salesData, setSalesData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [orders, setOrders] = useState([]);
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      // Fetch orders
+      const ordersRes = await fetch('/api/order/all-orders');
+      const ordersData = await ordersRes.json();
+      
+      // Fetch users
+      const usersRes = await fetch('/api/user/getusers');
+      const usersData = await usersRes.json();
+
+      if (ordersRes.ok && usersRes.ok) {
+        const orders = ordersData.data || [];
+        const users = usersData.users || [];
+        
+        // Calculate statistics
+        const totalOrders = orders.length;
+        const pendingOrders = orders.filter(order => order.status === 'pending').length;
+        const totalRevenue = orders.reduce((sum, order) => 
+          sum + order.items.reduce((orderSum, item) => orderSum + (item.price * item.quantity), 0), 0
+        );
+        const totalCustomers = users.length;
+
+        setStats({
+          totalOrders,
+          pendingOrders,
+          totalRevenue,
+          totalCustomers
+        });
+
+        // Set recent orders
+        setRecentOrders(orders.slice(0, 5));
+
+        // Generate sample sales data for the last 7 days
+        const last7Days = Array.from({length: 7}, (_, i) => {
+          const date = new Date();
+          date.setDate(date.getDate() - i);
+          return {
+            date: date.toLocaleDateString('en-US', { weekday: 'short' }),
+            sales: Math.floor(Math.random() * 10000) + 5000 // Sample data
+          };
+        }).reverse();
+
+        setSalesData(last7Days);
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleViewMyOrders = () => {
+    navigate('/orders');
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-4xl mx-auto p-5">
-      <h1 className="text-3xl font-semibold text-center my-5 text-emerald-600">
-        Dashboard
-      </h1>
-      
-      {/* User Profile Section */}
-      <Card className="mb-5">
-        <div className="flex items-center gap-4">
-          <img
-            src={currentUser?.profilePicture || "/default-avatar.png"}
-            alt="Profile"
-            className="w-16 h-16 rounded-full object-cover border-2 border-gray-300"
-          />
-          <div>
-            <h2 className="text-xl font-semibold">{currentUser?.username || "Guest"}</h2>
-            <p className="text-gray-600">{currentUser?.email || "No email provided"}</p>
-          </div>
-        </div>
-      </Card>
-
-      {/* Statistics Section */}
-      <div className="grid grid-cols-2 gap-4">
-        <Card>
-          <h3 className="text-lg font-semibold">Total Orders</h3>
-          <p className="text-2xl text-emerald-500 font-bold">{totalOrders}</p>
-        </Card>
-        <Card>
-          <h3 className="text-lg font-semibold">Pending Orders</h3>
-          <p className="text-2xl text-red-500 font-bold">{pendingOrders}</p>
-        </Card>
-      </div>
-
-      {/* Recent Activity */}
-      <Card className="mt-5">
-        <h3 className="text-xl font-semibold mb-3">Recent Activity</h3>
-        <ul className="text-gray-700">
-          {activity.map((item, index) => (
-            <li key={index}>{item}</li>
-          ))}
-        </ul>
-      </Card>
-
-      {/* PDF Download Button */}
-      <div className="mt-5 text-center">
-        <PDFDownloadLink
-          document={<DashboardPDF user={currentUser} totalOrders={totalOrders} pendingOrders={pendingOrders} activity={activity} />}
-          fileName="dashboard_report.pdf"
-          className="bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700"
+    <div className="p-4 max-w-7xl mx-auto">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-gray-800">Dashboard Overview</h1>
+        <Button 
+          gradientDuoTone="purpleToBlue" 
+          onClick={handleViewMyOrders}
+          className="flex items-center gap-2"
         >
-          {({ loading }) => (loading ? "Generating PDF..." : "Download PDF Report")}
-        </PDFDownloadLink>
+          <HiOutlineClipboardList className="h-5 w-5" />
+          My Orders
+        </Button>
       </div>
+
+      {/* Stats Grid */}
+      <Row gutter={[16, 16]} className="mb-6">
+        <Col xs={24} sm={12} lg={6}>
+          <Card>
+            <Statistic title="Total Orders" value={stats.totalOrders} />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card>
+            <Statistic 
+              title="Total Revenue" 
+              value={stats.totalRevenue} 
+              prefix="Rs"
+              precision={2}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card>
+            <Statistic title="Pending Orders" value={stats.pendingOrders} />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card>
+            <Statistic title="Total Customers" value={stats.totalCustomers} />
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Report Generation */}
+      <Row gutter={[16, 16]}>
+        <Col xs={24} sm={12}>
+          <Card title="Order Reports" className="h-full">
+            <p className="mb-4">Generate detailed reports for all orders</p>
+            <Button 
+              type="primary" 
+              onClick={() => generateAllOrdersPDF(orders)}
+              loading={loading}
+              className="mr-4"
+            >
+              Download Orders Report
+            </Button>
+          </Card>
+        </Col>
+        <Col xs={24} sm={12}>
+          <Card title="Product Reports" className="h-full">
+            <p className="mb-4">Generate detailed reports for all products</p>
+            <Button 
+              type="primary"
+              onClick={() => generateProductListPDF(products)}
+              loading={loading}
+            >
+              Download Products Report
+            </Button>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <Card>
+          <h3 className="text-lg font-semibold mb-4">Sales Overview</h3>
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={salesData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="sales" 
+                  stroke="#10B981" 
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+
+        <Card>
+          <h3 className="text-lg font-semibold mb-4">Order Status Distribution</h3>
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={[
+                { name: 'Pending', value: stats.pendingOrders },
+                { name: 'Completed', value: stats.totalOrders - stats.pendingOrders }
+              ]}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="value" fill="#10B981" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+      </div>
+
+      {/* Recent Orders Table */}
+      <Card>
+        <h3 className="text-lg font-semibold mb-4">Recent Orders</h3>
+        <Table hoverable>
+          <Table.Head>
+            <Table.HeadCell>Order ID</Table.HeadCell>
+            <Table.HeadCell>Customer</Table.HeadCell>
+            <Table.HeadCell>Status</Table.HeadCell>
+            <Table.HeadCell>Total</Table.HeadCell>
+            <Table.HeadCell>Date</Table.HeadCell>
+          </Table.Head>
+          <Table.Body>
+            {recentOrders.map((order) => (
+              <Table.Row key={order.orderId}>
+                <Table.Cell>#{order.orderId}</Table.Cell>
+                <Table.Cell>{order.customerEmail}</Table.Cell>
+                <Table.Cell>
+                  <span className={`px-2 py-1 rounded-full text-xs ${
+                    order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                    order.status === 'completed' ? 'bg-green-100 text-green-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {order.status}
+                  </span>
+                </Table.Cell>
+                <Table.Cell>
+                  Rs {order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0).toLocaleString()}
+                </Table.Cell>
+                <Table.Cell>
+                  {new Date(order.createdAt).toLocaleDateString()}
+                </Table.Cell>
+              </Table.Row>
+            ))}
+          </Table.Body>
+        </Table>
+      </Card>
     </div>
   );
 }

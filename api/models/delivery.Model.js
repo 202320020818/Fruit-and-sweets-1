@@ -2,28 +2,33 @@ import mongoose from "mongoose";
 
 const deliverySchema = new mongoose.Schema(
   {
-    userId:{ type: String, required: false },
-    customerName: { type: String, required: false },
-    phoneNo: { type: String, required: false }, // Mapping from mobileNumber
-    email: { type: String, required: false },
-    address: { type: String, required: false }, // Mapping from deliveryAddress
-    postalCode: { type: String, required: false }, // Added postalCode
-    district: { type: String, required: false }, // Added district
+    userId: { 
+      type: mongoose.Schema.Types.ObjectId, 
+      required: true,
+      ref: 'User', // Reference to User model
+      index: true
+    },
+    customerName: { type: String, required: true },
+    mobileNumber: { type: String, required: true },
+    email: { type: String, required: true },
+    deliveryAddress: { type: String, required: true },
+    postalCode: { type: String, required: true },
+    district: { type: String, required: true },
 
     deliveryType: { 
       type: String, 
-      enum: ["1", "0"], 
-      required: false 
+      enum: ["stripe", "bank_slip", "cash"], 
+      required: true 
     },
 
     deliveryService: { 
       type: String, 
-      enum: ["uber", "pickme", "darazd", "fardar", "koombiyo"], 
-      required: false 
+      enum: ["uber", "pickme", "darazd", "fardar", "koombiyo", "Pompt"], 
+      required: true 
     },
 
-    amount: { type: Number, required: false },
-    deliveryCharge: { type: Number, required: false },
+    amount: { type: Number, default: 0 },
+    deliveryCharge: { type: Number, default: 0 },
     totalAmount: { type: Number },
 
     status: {
@@ -35,14 +40,30 @@ const deliverySchema = new mongoose.Schema(
     estimatedTime: { type: String },
     completedAt: { type: String, default: "Pending" },
   },
-  { timestamps: true }
+  { 
+    timestamps: true,
+    collection: 'deliveries'
+  }
 );
 
 // Pre-save hook to calculate totalAmount before saving
 deliverySchema.pre("save", function (next) {
-  this.totalAmount = this.amount + this.deliveryCharge;
+  this.totalAmount = (this.amount || 0) + (this.deliveryCharge || 0);
   next();
 });
 
-const Delivery = mongoose.model("DeliveryDetials", deliverySchema);
+// Add debugging middleware
+deliverySchema.post('find', function(docs) {
+  console.log('Found deliveries:', docs);
+});
+
+deliverySchema.post('findOne', function(doc) {
+  console.log('Found delivery:', doc);
+});
+
+// Create index for userId
+deliverySchema.index({ userId: 1 });
+
+// Check if the model already exists
+const Delivery = mongoose.models.Delivery || mongoose.model("Delivery", deliverySchema);
 export default Delivery;
