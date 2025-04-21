@@ -339,7 +339,14 @@ export default function CartPage() {
                 <List.Item>
                   <Row gutter={16} align="middle" style={{ width: "100%" }}>
                     <Col span={4}>
-                      <Image src={item.image} width={100} />
+                      <Image 
+                        src={item.image.startsWith('http') ? item.image : `http://localhost:3000${item.image}`} 
+                        width={100} 
+                        alt={item.name}
+                        onError={(e) => {
+                          e.target.src = '/default-placeholder.png';
+                        }}
+                      />
                     </Col>
                     <Col span={10}>
                       <Title level={5}>{item.name}</Title>
