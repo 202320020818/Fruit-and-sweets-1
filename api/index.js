@@ -12,7 +12,7 @@ import cartRoutes from './routes/cart.route.js';
 import paymentRoutes from './routes/payment.route.js';
 import orderRoutes from './routes/order.route.js';
 import feedbackRoutes from './routes/feedback.route.js';
-import deliveryRoutes from './routes/delivery.route.js';
+import deliveryRoutes from './routes/delivery.routes.js';
 import admin from './config/firebase.js';
 import { stripeRawBodyMiddleware } from './middleware/stripeRawBoady.js';
 import inventoryRoutes from './routes/inventory.route.js';
@@ -29,17 +29,17 @@ mongoose
 
 const app = express();
 
-// ✅ Fix CORS Issue
-app.use(
-  cors({
-    origin: 'http://localhost:5173',
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
-  })
-);
+// ✅ CORS Configuration
+app.use(cors({
+  origin: 'http://localhost:5173',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With', 'X-Stripe-Signature'],
+  credentials: true,
+  preflightContinue: false,
+  optionsSuccessStatus: 204
+}));
 
-// ✅ Handle Preflight Requests
+// Handle preflight requests
 app.options('*', cors());
 
 // ✅ Middleware Order Matters!
@@ -48,11 +48,28 @@ app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
+// ✅ Add error handling for CORS
+app.use((err, req, res, next) => {
+  if (err.name === 'CorsError') {
+    console.error('CORS Error:', err);
+    res.status(403).json({
+      success: false,
+      message: 'CORS Error: Not allowed by CORS policy'
+    });
+  } else {
+    next(err);
+  }
+});
+
 // ✅ Serve Static Files
 // Use import.meta.url to get the directory and join paths accordingly
 const __dirname = path.dirname(new URL(import.meta.url).pathname); // Get current directory
 app.use('/uploads', express.static('uploads'));
-app.use('/uploads/bank_slips', express.static(path.join(__dirname, 'uploads', 'bank_slips'))); // Serve bank slip files
+app.use('/uploads/orders', express.static(path.join(__dirname, 'uploads', 'orders')));
+app.use('/uploads/bank-slips', express.static(path.join(__dirname, 'uploads', 'bank-slips')));
+
+// ✅ Stripe Webhook Middleware
+app.use('/api/payment/webhook', stripeRawBodyMiddleware);
 
 // ✅ Routes
 app.use('/api/user', userRoutes);
@@ -68,6 +85,7 @@ app.use('/api/feedback', feedbackRoutes);
 app.use('/api/comment', commentRoutes);
 
 app.use((err, req, res, next) => {
+  console.error('Error:', err);
   res.status(err.statusCode || 500).json({
     success: false,
     statusCode: err.statusCode || 500,
