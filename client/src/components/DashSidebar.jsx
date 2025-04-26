@@ -100,6 +100,18 @@ export default function DashSidebar() {
                 </Sidebar.Item>
               </Link>
 
+              <Link to="/dashboard?tab=comments">
+                <Sidebar.Item
+                  className={`hover:bg-gray-200 ${
+                    tab === "comments" ? "bg-gray-300" : ""
+                  }`}
+                  icon={HiAnnotation}
+                  as="div"
+                >
+                  Comments
+                </Sidebar.Item>
+              </Link>
+
               <Link to="/dashboard?tab=feedback">
                 <Sidebar.Item
                   className={`hover:bg-gray-200 ${
@@ -144,18 +156,6 @@ export default function DashSidebar() {
                   </Sidebar.Item>
                 </Link>
               </Sidebar.Collapse>
-
-              <Link to="/dashboard?tab=comments">
-                <Sidebar.Item
-                  className={`hover:bg-gray-200 ${
-                    tab === "comments" ? "bg-gray-300" : ""
-                  }`}
-                  icon={HiAnnotation}
-                  as="div"
-                >
-                  Comments
-                </Sidebar.Item>
-              </Link>
 
               <Link to="/dashboard?tab=delivery-details">
                 <Sidebar.Item

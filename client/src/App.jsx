@@ -20,9 +20,9 @@ import PaymentFailed from "./pages/PaymentFailed";
 import DeliveryDetails from "./pages/DeliveryDetails";
 import BankSlipUpload from "./pages/BankSlipUpload"; // ✅ Corrected path
 import CreatePost from "./pages/CreatePost"; // ✅ Add this line
-
-
 import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 import "react-toastify/dist/ReactToastify.css";
 import Notification from "./components/Notification"; // Import Notification component
 
@@ -44,6 +44,7 @@ export default function App() {
         </Route>
         <Route path="/create-post" element={<CreatePost />} />
 
+        
         
         
         <Route path="/dashboard" element={<Dashboard />} />

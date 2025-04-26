@@ -21,6 +21,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "file-saver": "^2.0.5",
     "firebase": "^11.6.0",
     "flowbite": "^3.1.2",
     "flowbite-react": "^0.10.2",
@@ -35,9 +36,10 @@
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.3.0",
     "react-toastify": "^11.0.5",
-    "recharts": "^2.15.1",
+    "recharts": "^2.15.3",
     "redux-persist": "^6.0.0",
-    "stripe": "^17.7.0"
+    "stripe": "^17.7.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",

@@ -1,21 +1,20 @@
-import { Modal, Table, Button, Textarea, Alert } from "flowbite-react";
-import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
-import { HiOutlineExclamationCircle } from "react-icons/hi";
-import { FaThumbsUp, FaEdit } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify"; // ✅ Import toast
+import { Modal, Table, Button, Textarea, Alert } from 'flowbite-react';
+import { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { HiOutlineExclamationCircle } from 'react-icons/hi';
+import { FaThumbsUp, FaEdit } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
 export default function DashComments() {
   const { currentUser } = useSelector((state) => state.user);
   const [comments, setComments] = useState([]);
   const [showMore, setShowMore] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [commentIdToDelete, setCommentIdToDelete] = useState("");
-  const [newComment, setNewComment] = useState("");
-  const [newCommentError, setNewCommentError] = useState("");
+  const [commentIdToDelete, setCommentIdToDelete] = useState('');
+  const [newComment, setNewComment] = useState('');
+  const [newCommentError, setNewCommentError] = useState('');
   const [editingCommentId, setEditingCommentId] = useState(null);
-  const [editingContent, setEditingContent] = useState("");
+  const [editingContent, setEditingContent] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -52,55 +51,47 @@ export default function DashComments() {
     setShowModal(false);
     try {
       const res = await fetch(`/api/comment/deleteComment/${commentIdToDelete}`, {
-        method: "DELETE",
+        method: 'DELETE',
       });
       if (res.ok) {
         setComments((prev) => prev.filter((c) => c._id !== commentIdToDelete));
-        toast.success("Comment deleted!");
-      } else {
-        toast.error("Failed to delete comment.");
       }
     } catch (error) {
-      toast.error("Error deleting comment.");
       console.log(error.message);
     }
   };
 
   const handleCreateComment = async () => {
-    if (!currentUser) return navigate("/sign-in");
-    if (newComment.trim().length === 0)
-      return setNewCommentError("Comment cannot be empty");
+    if (!currentUser) return navigate('/sign-in');
+    if (newComment.length === 0) return setNewCommentError('Comment cannot be empty');
 
     try {
-      const res = await fetch("/api/comment/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/comment/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           content: newComment,
-          postId: "admin-panel-post",
+          postId: 'admin-panel-post',
           userId: currentUser._id,
         }),
       });
       const data = await res.json();
       if (res.ok) {
         setComments([data, ...comments]);
-        setNewComment("");
-        setNewCommentError("");
-        toast.success("Comment added successfully!");
+        setNewComment('');
+        setNewCommentError('');
       } else {
-        setNewCommentError(data.message || "Failed to add comment");
-        toast.error(data.message || "Failed to add comment");
+        setNewCommentError(data.message || 'Failed to add comment');
       }
     } catch (error) {
       setNewCommentError(error.message);
-      toast.error(error.message);
     }
   };
 
   const handleLike = async (commentId) => {
     try {
       const res = await fetch(`/api/comment/likeComment/${commentId}`, {
-        method: "PUT",
+        method: 'PUT',
       });
       const data = await res.json();
       if (res.ok) {
@@ -115,12 +106,8 @@ export default function DashComments() {
               : c
           )
         );
-        toast.success("Liked the comment!");
-      } else {
-        toast.error("Failed to like comment.");
       }
     } catch (error) {
-      toast.error("Error liking comment.");
       console.log(error.message);
     }
   };
@@ -133,25 +120,19 @@ export default function DashComments() {
   const handleSaveEdit = async (commentId) => {
     try {
       const res = await fetch(`/api/comment/editComment/${commentId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: editingContent }),
       });
       const updated = await res.json();
       if (res.ok) {
         setComments((prev) =>
-          prev.map((c) =>
-            c._id === commentId ? { ...c, content: updated.content } : c
-          )
+          prev.map((c) => (c._id === commentId ? { ...c, content: updated.content } : c))
         );
         setEditingCommentId(null);
-        setEditingContent("");
-        toast.success("Comment edited successfully!");
-      } else {
-        toast.error("Failed to edit comment.");
+        setEditingContent('');
       }
     } catch (error) {
-      toast.error("Error editing comment.");
       console.log(error.message);
     }
   };
@@ -169,18 +150,12 @@ export default function DashComments() {
             maxLength={200}
           />
           <div className="flex justify-between mt-2 items-center">
-            <p className="text-xs text-gray-500">
-              {200 - newComment.length} characters left
-            </p>
+            <p className="text-xs text-gray-500">{200 - newComment.length} characters left</p>
             <Button gradientDuoTone="purpleToBlue" onClick={handleCreateComment}>
               Post Comment
             </Button>
           </div>
-          {newCommentError && (
-            <Alert color="failure" className="mt-2">
-              {newCommentError}
-            </Alert>
-          )}
+          {newCommentError && <Alert color="failure" className="mt-2">{newCommentError}</Alert>}
         </div>
       )}
 
@@ -188,15 +163,16 @@ export default function DashComments() {
         <>
           <Table hoverable className="shadow-md">
             <Table.Head>
-              <Table.HeadCell>Date</Table.HeadCell>
-              <Table.HeadCell>Content</Table.HeadCell>
+              <Table.HeadCell>Date updated</Table.HeadCell>
+              <Table.HeadCell>Comment content</Table.HeadCell>
+              <Table.HeadCell>Likes</Table.HeadCell>
               <Table.HeadCell>Post ID</Table.HeadCell>
               <Table.HeadCell>User ID</Table.HeadCell>
-              <Table.HeadCell>Likes & Actions</Table.HeadCell>
+              <Table.HeadCell>Actions</Table.HeadCell>
             </Table.Head>
-            <Table.Body className="divide-y">
-              {comments.map((comment) => (
-                <Table.Row key={comment._id} className="bg-white dark:bg-gray-800">
+            {comments.map((comment) => (
+              <Table.Body className="divide-y" key={comment._id}>
+                <Table.Row className="bg-white dark:border-gray-700 dark:bg-gray-800">
                   <Table.Cell>{new Date(comment.updatedAt).toLocaleDateString()}</Table.Cell>
                   <Table.Cell>
                     {editingCommentId === comment._id ? (
@@ -206,58 +182,46 @@ export default function DashComments() {
                           onChange={(e) => setEditingContent(e.target.value)}
                           rows={2}
                         />
-                        <div className="flex gap-2 mt-1">
-                          <Button size="xs" onClick={() => handleSaveEdit(comment._id)}>
-                            Save
-                          </Button>
-                          <Button size="xs" color="gray" onClick={() => setEditingCommentId(null)}>
-                            Cancel
-                          </Button>
-                        </div>
+                        <Button size="xs" onClick={() => handleSaveEdit(comment._id)} className="mt-1">
+                          Save
+                        </Button>
                       </>
                     ) : (
                       comment.content
                     )}
                   </Table.Cell>
+                  <Table.Cell className="flex gap-2 items-center">
+                    <span>{comment.numberOfLikes}</span>
+                    <button
+                      className="text-blue-500 hover:scale-110"
+                      onClick={() => handleLike(comment._id)}
+                    >
+                      <FaThumbsUp />
+                    </button>
+                  </Table.Cell>
                   <Table.Cell>{comment.postId}</Table.Cell>
                   <Table.Cell>{comment.userId}</Table.Cell>
-                  <Table.Cell>
-                    <div className="flex gap-4 items-center">
-                      <div className="flex items-center gap-2">
-                        <span>{comment.numberOfLikes}</span>
-                        <button
-                          className="text-blue-500 hover:scale-110"
-                          onClick={() => handleLike(comment._id)}
-                        >
-                          <FaThumbsUp />
-                        </button>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {(currentUser._id === comment.userId || currentUser.isAdmin) && (
-                          <button
-                            className="text-green-600 hover:scale-105"
-                            onClick={() => handleEdit(comment)}
-                          >
-                            <FaEdit />
-                          </button>
-                        )}
-                        <button
-                          className="text-red-500 hover:underline"
-                          onClick={() => {
-                            setShowModal(true);
-                            setCommentIdToDelete(comment._id);
-                          }}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
+                  <Table.Cell className="flex gap-2">
+                    <button
+                      className="text-green-600 hover:underline"
+                      onClick={() => handleEdit(comment)}
+                    >
+                      <FaEdit />
+                    </button>
+                    <span
+                      onClick={() => {
+                        setShowModal(true);
+                        setCommentIdToDelete(comment._id);
+                      }}
+                      className="text-red-500 hover:underline cursor-pointer"
+                    >
+                      Delete
+                    </span>
                   </Table.Cell>
                 </Table.Row>
-              ))}
-            </Table.Body>
+              </Table.Body>
+            ))}
           </Table>
-
           {showMore && (
             <button
               onClick={handleShowMore}
@@ -268,12 +232,9 @@ export default function DashComments() {
           )}
         </>
       ) : (
-        <p className="text-sm text-center text-gray-500 mt-10">
-          You have no comments yet!
-        </p>
+        <p className="text-sm text-center text-gray-500 mt-10">You have no comments yet!</p>
       )}
 
-      {/* Delete Confirmation Modal */}
       <Modal show={showModal} onClose={() => setShowModal(false)} popup size="md">
         <Modal.Header />
         <Modal.Body>

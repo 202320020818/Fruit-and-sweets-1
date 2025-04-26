@@ -18,6 +18,7 @@ import { stripeRawBodyMiddleware } from './middleware/stripeRawBoady.js';
 import inventoryRoutes from './routes/inventory.route.js';
 import wishlistRoutes from './routes/wishlist.route.js';
 import bankSlipRoutes from './routes/bankSlip.route.js';
+import commentRoutes from './routes/comment.route.js';
 
 dotenv.config();
 
@@ -64,6 +65,7 @@ app.use('/api/inventory', inventoryRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/bankslip', bankSlipRoutes); // Add Bank Slip Routes here
 app.use('/api/feedback', feedbackRoutes);
+app.use('/api/comment', commentRoutes);
 
 app.use((err, req, res, next) => {
   res.status(err.statusCode || 500).json({

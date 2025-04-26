@@ -1,104 +1,438 @@
-import React from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { Card, Button } from "flowbite-react";
-import { PDFDownloadLink } from "@react-pdf/renderer";
-import { Page, Text, View, Document, StyleSheet } from "@react-pdf/renderer";
+import {
+  HiAnnotation,
+  HiArrowNarrowUp,
+  HiDocumentText,
+  HiOutlineUserGroup,
+} from "react-icons/hi";
+import { Button, Table } from "flowbite-react";
+import { Link } from "react-router-dom";
+import {
+  PDFDownloadLink,
+  Page,
+  Text,
+  View,
+  Document,
+  StyleSheet,
+} from "@react-pdf/renderer";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
+// PDF Styles
 const styles = StyleSheet.create({
   page: { padding: 20 },
   section: { marginBottom: 10 },
-  title: { fontSize: 20, fontWeight: "bold", marginBottom: 5 },
-  text: { fontSize: 14, marginBottom: 2 },
+  title: { fontSize: 20, marginBottom: 10 },
+  text: { fontSize: 12, marginBottom: 5 },
 });
 
-const DashboardPDF = ({ user, totalOrders, pendingOrders, activity }) => (
+// PDF Component
+const DashboardPDF = ({ posts, users, comments }) => (
   <Document>
     <Page size="A4" style={styles.page}>
       <View style={styles.section}>
-        <Text style={styles.title}>Dashboard Report</Text>
+        <Text style={styles.title}>Recent Posts</Text>
+        {posts.map((post, index) => (
+          <Text key={index}>- {post.title}</Text>
+        ))}
       </View>
       <View style={styles.section}>
-        <Text style={styles.title}>User Profile</Text>
-        <Text style={styles.text}>Username: {user?.username || "N/A"}</Text>
-        <Text style={styles.text}>Email: {user?.email || "N/A"}</Text>
+        <Text style={styles.title}>Recent Users</Text>
+        {users.map((user) => (
+          <Text key={user._id}>- {user.username}</Text>
+        ))}
       </View>
       <View style={styles.section}>
-        <Text style={styles.title}>Statistics</Text>
-        <Text style={styles.text}>Total Orders: {totalOrders}</Text>
-        <Text style={styles.text}>Pending Orders: {pendingOrders}</Text>
-      </View>
-      <View style={styles.section}>
-        <Text style={styles.title}>Recent Activity</Text>
-        {activity.map((item, index) => (
-          <Text key={index} style={styles.text}>{item}</Text>
+        <Text style={styles.title}>Recent Comments</Text>
+        {comments.map((comment) => (
+          <Text key={comment._id}>- {comment.content}</Text>
         ))}
       </View>
     </Page>
   </Document>
 );
 
+// Main Dashboard Component
 export default function DashboardComp() {
-  const { currentUser } = useSelector((state) => state.user) || {};
-  const totalOrders = 12;
-  const pendingOrders = 2;
-  const activity = [
-    "✔ Order #1234 delivered successfully",
-    "✔ Profile updated",
-    "❌ Payment failed for Order #1256",
-  ];
+  const [users, setUsers] = useState([]);
+  const [comments, setComments] = useState([]);
+  const [posts, setPosts] = useState([]);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [totalPosts, setTotalPosts] = useState(0);
+  const [totalComments, setTotalComments] = useState(0);
+  const [lastMonthUsers, setLastMonthUsers] = useState(0);
+  const [lastMonthPosts, setLastMonthPosts] = useState(0);
+  const [lastMonthComments, setLastMonthComments] = useState(0);
+  const { currentUser } = useSelector((state) => state.user);
+
+  // Excel Export Handler
+  const handleExportExcel = () => {
+    const wb = XLSX.utils.book_new();
+
+    const postsSheet = XLSX.utils.json_to_sheet(
+      posts.map((post) => ({ Title: post.title }))
+    );
+    XLSX.utils.book_append_sheet(wb, postsSheet, "Posts");
+
+    const usersSheet = XLSX.utils.json_to_sheet(
+      users.map((user) => ({ Username: user.username }))
+    );
+    XLSX.utils.book_append_sheet(wb, usersSheet, "Users");
+
+    const commentsSheet = XLSX.utils.json_to_sheet(
+      comments.map((comment) => ({
+        Content: comment.content,
+        Likes: comment.numberOfLikes,
+      }))
+    );
+    XLSX.utils.book_append_sheet(wb, commentsSheet, "Comments");
+
+    const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const data = new Blob([excelBuffer], {
+      type: "application/octet-stream",
+    });
+    saveAs(data, "dashboard_report.xlsx");
+  };
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await fetch("/api/user/getusers?limit=5");
+        const data = await res.json();
+        if (res.ok) {
+          setUsers(data.users);
+          setTotalUsers(data.totalUsers);
+          setLastMonthUsers(data.lastMonthUsers);
+        }
+      } catch (error) {
+        console.log(error.message);
+      }
+    };
+
+    const fetchComments = async () => {
+      try {
+        const res = await fetch("/api/comment/getcomments?limit=5");
+        const data = await res.json();
+        if (res.ok) {
+          setComments(data.comments);
+          setTotalComments(data.totalComments);
+          setLastMonthComments(data.lastMonthComments);
+        }
+      } catch (error) {
+        console.log(error.message);
+      }
+    };
+
+    const fetchPosts = async () => {
+      try {
+        const res = await fetch("/api/post/getposts?limit=5");
+        const data = await res.json();
+        if (res.ok && data.posts.length > 0) {
+          setPosts(data.posts);
+          setTotalPosts(data.totalPosts);
+          setLastMonthPosts(data.lastMonthPosts);
+        } else {
+          const localPosts = JSON.parse(localStorage.getItem("posts")) || [];
+          setPosts(localPosts.slice(-5).reverse());
+          setTotalPosts(localPosts.length);
+          setLastMonthPosts(0);
+        }
+      } catch (error) {
+        console.log("API error, loading from localStorage:", error.message);
+        const localPosts = JSON.parse(localStorage.getItem("posts")) || [];
+        setPosts(localPosts.slice(-5).reverse());
+        setTotalPosts(localPosts.length);
+        setLastMonthPosts(0);
+      }
+    };
+
+    if (currentUser.isAdmin) {
+      fetchUsers();
+      fetchPosts();
+      fetchComments();
+    }
+  }, [currentUser]);
 
   return (
-    <div className="max-w-4xl mx-auto p-5">
-      <h1 className="text-3xl font-semibold text-center my-5 text-emerald-600">
-        Dashboard
-      </h1>
-      
-      {/* User Profile Section */}
-      <Card className="mb-5">
-        <div className="flex items-center gap-4">
-          <img
-            src={currentUser?.profilePicture || "/default-avatar.png"}
-            alt="Profile"
-            className="w-16 h-16 rounded-full object-cover border-2 border-gray-300"
-          />
-          <div>
-            <h2 className="text-xl font-semibold">{currentUser?.username || "Guest"}</h2>
-            <p className="text-gray-600">{currentUser?.email || "No email provided"}</p>
+    <div className="p-3 md:mx-auto">
+      <div className="flex-wrap flex gap-4 justify-center">
+        {/* Users */}
+        <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-72 w-full rounded-md shadow-md">
+          <div className="flex justify-between">
+            <div>
+              <h3 className="text-gray-500 text-md uppercase">Total Users</h3>
+              <p className="text-2xl">{totalUsers}</p>
+            </div>
+            <HiOutlineUserGroup className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" />
+          </div>
+          <div className="flex gap-2 text-sm">
+            <span className="text-green-500 flex items-center">
+              <HiArrowNarrowUp /> {lastMonthUsers}
+            </span>
+            <div className="text-gray-500">Last month</div>
           </div>
         </div>
-      </Card>
 
-      {/* Statistics Section */}
-      <div className="grid grid-cols-2 gap-4">
-        <Card>
-          <h3 className="text-lg font-semibold">Total Orders</h3>
-          <p className="text-2xl text-emerald-500 font-bold">{totalOrders}</p>
-        </Card>
-        <Card>
-          <h3 className="text-lg font-semibold">Pending Orders</h3>
-          <p className="text-2xl text-red-500 font-bold">{pendingOrders}</p>
-        </Card>
+        {/* Comments */}
+        <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-72 w-full rounded-md shadow-md">
+          <div className="flex justify-between">
+            <div>
+              <h3 className="text-gray-500 text-md uppercase">
+                Total Comments
+              </h3>
+              <p className="text-2xl">{totalComments}</p>
+            </div>
+            <HiAnnotation className="bg-indigo-600 text-white rounded-full text-5xl p-3 shadow-lg" />
+          </div>
+          <div className="flex gap-2 text-sm">
+            <span className="text-green-500 flex items-center">
+              <HiArrowNarrowUp /> {lastMonthComments}
+            </span>
+            <div className="text-gray-500">Last month</div>
+          </div>
+        </div>
+
+        {/* Posts */}
+        <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-72 w-full rounded-md shadow-md">
+          <div className="flex justify-between">
+            <div>
+              <h3 className="text-gray-500 text-md uppercase">Total Posts</h3>
+              <p className="text-2xl">{totalPosts}</p>
+            </div>
+            <HiDocumentText className="bg-lime-600 text-white rounded-full text-5xl p-3 shadow-lg" />
+          </div>
+          <div className="flex gap-2 text-sm">
+            <span className="text-green-500 flex items-center">
+              <HiArrowNarrowUp /> {lastMonthPosts}
+            </span>
+            <div className="text-gray-500">Last month</div>
+          </div>
+        </div>
       </div>
 
-      {/* Recent Activity */}
-      <Card className="mt-5">
-        <h3 className="text-xl font-semibold mb-3">Recent Activity</h3>
-        <ul className="text-gray-700">
-          {activity.map((item, index) => (
-            <li key={index}>{item}</li>
-          ))}
-        </ul>
-      </Card>
+      {/* Tables */}
+      <div className="flex flex-wrap md:flex-nowrap gap-4 py-3 mx-auto justify-center items-start">
+        {/* Posts Table */}
+        <div className="flex flex-col w-full md:w-1/3 shadow-md p-2 rounded-md dark:bg-gray-800">
+          <div className="flex justify-between p-3 text-sm font-semibold">
+            <h1 className="text-center p-2">Recent posts</h1>
+            <Button outline gradientDuoTone="purpleToPink">
+              <Link to={"/dashboard?tab=posts"}>See all</Link>
+            </Button>
+          </div>
+          <Table hoverable>
+            <Table.Head>
+              <Table.HeadCell>Post image</Table.HeadCell>
+              <Table.HeadCell>Post Title</Table.HeadCell>
+            </Table.Head>
+            {posts.map((post, index) => (
+              <Table.Body key={index} className="divide-y">
+                <Table.Row className="bg-white dark:border-gray-700 dark:bg-gray-800">
+                  <Table.Cell>
+                    <img
+                      src={post.image}
+                      alt="post"
+                      className="w-14 h-10 rounded-md bg-gray-500 object-cover"
+                    />
+                  </Table.Cell>
+                  <Table.Cell className="w-96">{post.title}</Table.Cell>
+                </Table.Row>
+              </Table.Body>
+            ))}
+          </Table>
+        </div>
 
-      {/* PDF Download Button */}
-      <div className="mt-5 text-center">
+        {/* Users Table */}
+        <div className="flex flex-col w-full md:w-1/3 shadow-md p-2 rounded-md dark:bg-gray-800">
+          <div className="flex justify-between p-3 text-sm font-semibold">
+            <h1 className="text-center p-2">Recent users</h1>
+            <Button outline gradientDuoTone="purpleToPink">
+              <Link to={"/dashboard?tab=users"}>See all</Link>
+            </Button>
+          </div>
+          <Table hoverable>
+            <Table.Head>
+              <Table.HeadCell>User image</Table.HeadCell>
+              <Table.HeadCell>Username</Table.HeadCell>
+            </Table.Head>
+            {users.map((user) => (
+              <Table.Body key={user._id} className="divide-y">
+                <Table.Row className="bg-white dark:border-gray-700 dark:bg-gray-800">
+                  <Table.Cell>
+                    <img
+                      src={user.profilePicture}
+                      alt="user"
+                      className="w-10 h-10 rounded-full bg-gray-500"
+                    />
+                  </Table.Cell>
+                  <Table.Cell>{user.username}</Table.Cell>
+                </Table.Row>
+              </Table.Body>
+            ))}
+          </Table>
+        </div>
+
+        {/* Comments Table */}
+        <div className="flex flex-col w-full md:w-1/3 shadow-md p-2 rounded-md dark:bg-gray-800">
+          <div className="flex justify-between p-3 text-sm font-semibold">
+            <h1 className="text-center p-2">Recent comments</h1>
+            <Button outline gradientDuoTone="purpleToPink">
+              <Link to={"/dashboard?tab=comments"}>See all</Link>
+            </Button>
+          </div>
+          <Table hoverable>
+            <Table.Head>
+              <Table.HeadCell>Comment content</Table.HeadCell>
+              <Table.HeadCell>Likes</Table.HeadCell>
+            </Table.Head>
+            {comments.map((comment) => (
+              <Table.Body key={comment._id} className="divide-y">
+                <Table.Row className="bg-white dark:border-gray-700 dark:bg-gray-800">
+                  <Table.Cell className="w-96">
+                    <p className="line-clamp-2">{comment.content}</p>
+                  </Table.Cell>
+                  <Table.Cell>{comment.numberOfLikes}</Table.Cell>
+                </Table.Row>
+              </Table.Body>
+            ))}
+          </Table>
+        </div>
+      </div>
+
+      {/* Export Buttons */}
+      <div className="flex justify-end gap-4 mt-8 mb-4">
         <PDFDownloadLink
-          document={<DashboardPDF user={currentUser} totalOrders={totalOrders} pendingOrders={pendingOrders} activity={activity} />}
+          document={
+            <DashboardPDF posts={posts} users={users} comments={comments} />
+          }
           fileName="dashboard_report.pdf"
-          className="bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700"
         >
-          {({ loading }) => (loading ? "Generating PDF..." : "Download PDF Report")}
+          {({ loading }) => (
+            <Button gradientDuoTone="pinkToOrange" outline>
+              {loading ? "Preparing PDF..." : "Download PDF"}
+            </Button>
+          )}
         </PDFDownloadLink>
+
+        <Button
+          onClick={handleExportExcel}
+          gradientDuoTone="greenToBlue"
+          outline
+        >
+          Download Excel
+        </Button>
+      </div>
+      {/* Charts */}
+      <div className="mt-8 flex flex-col md:flex-row justify-center gap-8">
+        {/* Bar Chart */}
+        <div className="w-full md:w-1/2 h-96 dark:bg-slate-800 p-4 rounded-md shadow-md">
+          <h3 className="text-center text-lg font-semibold mb-2 text-gray-300">
+            Activity Overview (Bar)
+          </h3>
+          <ResponsiveContainer width="100%" height="90%">
+            <BarChart
+              data={[
+                { name: "Users", value: totalUsers },
+                { name: "Posts", value: totalPosts },
+                { name: "Comments", value: totalComments },
+              ]}
+            >
+              <defs>
+                <linearGradient id="colorBar" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#34D399" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.8} />
+                </linearGradient>
+              </defs>
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar
+                dataKey="value"
+                fill="url(#colorBar)"
+                radius={[6, 6, 0, 0]}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Pie Chart */}
+        <div className="w-full md:w-1/2 h-96 dark:bg-slate-800 p-4 rounded-md shadow-md">
+          <h3 className="text-center text-lg font-semibold mb-2 text-gray-300">
+            Activity Share (Pie)
+          </h3>
+          <ResponsiveContainer width="100%" height="90%">
+            <PieChart>
+              <defs>
+                {/* Users - Indigo */}
+                <linearGradient id="colorUsers" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#66ffff" /> {/* indigo-500 */}
+                  <stop offset="100%" stopColor="#312e81" /> {/* indigo-900 */}
+                </linearGradient>
+
+                {/* Posts - Rose */}
+                <linearGradient id="colorPosts" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#006633" /> {/* rose-500 */}
+                  <stop offset="100%" stopColor="#00b377" /> {/* rose-900 */}
+                </linearGradient>
+
+                {/* Comments - Teal */}
+                <linearGradient id="colorComments" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#14b8a6" /> {/* teal-500 */}
+                  <stop offset="100%" stopColor="#0f766e" /> {/* teal-800 */}
+                </linearGradient>
+              </defs>
+
+              {/* Setup Pie Data */}
+              <Pie
+                data={[
+                  { name: "Users", value: totalUsers },
+                  { name: "Posts", value: totalPosts },
+                  { name: "Comments", value: totalComments },
+                ]}
+                cx="50%"
+                cy="45%"
+                outerRadius={100}
+                fill="#8884d8"
+                dataKey="value"
+                label
+              >
+                <Cell fill="url(#colorUsers)" />
+                <Cell fill="url(#colorPosts)" />
+                <Cell fill="url(#colorComments)" />
+              </Pie>
+
+              {/* Custom Tooltip */}
+              <Tooltip />
+
+              {/* Custom Legend */}
+              <Legend
+                formatter={(value) => {
+                  if (value === "Users")
+                    return <span style={{ color: "#66ffff" }}>{value}</span>;
+                  if (value === "Posts")
+                    return <span style={{ color: "#006633" }}>{value}</span>;
+                  if (value === "Comments")
+                    return <span style={{ color: "#14b8a6" }}>{value}</span>;
+                  return value;
+                }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
       </div>
     </div>
   );
