@@ -1,126 +1,90 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Tag, message } from 'antd';
 import { useSelector } from 'react-redux';
-
-const priorityLabels = {
-  1: 'High',
-  2: 'Medium',
-  3: 'Low',
-};
+import { Card, Button, List, message, Tag } from 'antd';
 
 const priorityColors = {
-  1: '#ff4d4f', // Red for High
-  2: '#fa8c16', // Orange for Medium
-  3: '#52c41a', // Green for Low
+  High: 'red',
+  Medium: 'orange',
+  Low: 'green',
 };
 
-const categoryColors = {
-  'Fruit': '#FFFBF0', // Light Yellow for Fruit
-  'Sweet': '#FFEBF0', // Light Pink for Sweet
-  'Other': '#F0F8FF', // Light Blue for other categories
-};
-
-const WishlistPage = () => {
+export default function WishlistPage() {
   const currentUser = useSelector((state) => state.user.currentUser);
   const userId = currentUser?._id;
   const [wishlist, setWishlist] = useState([]);
 
   const fetchWishlist = async () => {
     try {
-      const res = await fetch(`/api/wishlist/${userId}`);
-      const data = await res.json();
-      if (res.ok) {
+      const response = await fetch(`/api/wishlist/${userId}`);
+      const data = await response.json();
+      if (response.ok) {
         setWishlist(data.data);
       } else {
-        message.error(data.message);
+        message.error(data.message || "Failed to fetch wishlist.");
       }
     } catch (err) {
-      console.error(err);
-      message.error("Error fetching wishlist.");
-    }
-  };
-
-  const handleRemove = async (itemId) => {
-    try {
-      const res = await fetch(`/api/wishlist/${itemId}`, {
-        method: 'DELETE',
-      });
-      const data = await res.json();
-      if (res.ok) {
-        message.success("Removed from wishlist");
-        setWishlist((prev) => prev.filter((item) => item.itemId !== itemId));
-      } else {
-        message.error(data.message);
-      }
-    } catch (err) {
-      console.error(err);
-      message.error("Error deleting item.");
+      console.error("Error fetching wishlist:", err);
+      message.error("Something went wrong.");
     }
   };
 
   useEffect(() => {
-    if (userId) fetchWishlist();
+    if (userId) {
+      fetchWishlist();
+    }
   }, [userId]);
 
-  const columns = [
-    {
-      title: 'Name',
-      dataIndex: 'name',
-    },
-    {
-      title: 'Category',
-      dataIndex: 'category',
-      render: (text) => text || 'N/A',
-    },
-    {
-      title: 'Price',
-      dataIndex: 'price',
-      render: (value) => `Rs ${value}`,
-    },
-    {
-      title: 'Priority',
-      dataIndex: 'priority',
-      render: (priority) => (
-        <Tag color={priorityColors[priority]}>
-          {priorityLabels[priority]}
-        </Tag>
-      ),
-    },
-    {
-      title: 'Action',
-      render: (_, record) => (
-        <Button danger onClick={() => handleRemove(record.itemId)}>Remove</Button>
-      ),
-    },
-  ];
-
-  const getRowClassName = (record) => {
-    const backgroundColor = categoryColors[record.category] || '#FFFFFF';
-    return {
-      backgroundColor,
-    };
+  const handleRemoveFromWishlist = async (itemId) => {
+    try {
+      const response = await fetch(`/api/wishlist/${userId}/${itemId}`, {
+        method: "DELETE",
+      });
+      const data = await response.json();
+      if (response.ok) {
+        message.success("Item removed from wishlist");
+        setWishlist((prev) => prev.filter(item => item.itemId !== itemId));
+      } else {
+        message.error(data.message);
+      }
+    } catch (err) {
+      console.error("Error removing from wishlist:", err);
+    }
   };
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h2>My Wishlist</h2>
-      <Table
-        rowKey="itemId"
+    <div style={{ padding: 20 }}>
+      <Card title="My Wishlist">
+        <List
+          itemLayout="vertical"
           dataSource={wishlist}
-        columns={columns}
-        pagination={false}
-        bordered
-        rowClassName={getRowClassName}
-        components={{
-          header: {
-            cell: (props) => (
-              <th {...props} style={{ backgroundColor: '#800080', color: '#fff' }} />
-            ),
-          },
-        }}
-      />
+          renderItem={(item) => (
+            <List.Item
+              actions={[
+                <Button type="link" danger onClick={() => handleRemoveFromWishlist(item.itemId)}>
+                  Remove
+                </Button>
+              ]}
+            >
+              <List.Item.Meta
+                title={item.name}
+                description={
+                  <>
+                    <p>Rs {item.price}</p>
+                    <p><strong>Category:</strong> {item.category || 'None'}</p>
+                    <p><strong>Custom Category:</strong> {item.customCategory || 'N/A'}</p>
+                    <p>
+                      <strong>Priority:</strong>{' '}
+                      <Tag color={priorityColors[item.priority] || 'blue'}>
+                        {item.priority}
+                      </Tag>
+                    </p>
+                  </>
+                }
+              />
+            </List.Item>
+          )}
+        />
+      </Card>
     </div>
   );
-};
-
-export default WishlistPage;
+}
