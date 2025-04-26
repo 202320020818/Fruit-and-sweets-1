@@ -26,6 +26,8 @@ import "react-toastify/dist/ReactToastify.css";
 import "react-toastify/dist/ReactToastify.css";
 import Notification from "./components/Notification"; // Import Notification component
 
+
+
 export default function App() {
   return (
     <BrowserRouter>
