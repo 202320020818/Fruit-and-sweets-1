@@ -68,7 +68,7 @@ const getById = async(req,res,next)=>{
         console.log(err);
     }
 
-    if(!feedback){
+    if(!feedbacks){
         return res.status(404).send({message:"Feedback not available"});
     }
 

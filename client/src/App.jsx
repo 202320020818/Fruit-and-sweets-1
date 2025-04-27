@@ -54,7 +54,7 @@ export default function App() {
         <Route path="/cart" element={<CartPage />} />
         <Route path="/payment-success" element={<PaymentSuccess />} />
         <Route path="/order" element={<OrderPage />} /> {/* Order page route */}
-        <Route path="/feedback" element={<Feedback />} />{" "}
+        <Route path="/feedback" element={<FeedbackForm />} />{" "}
         {/* Corrected route for Feedback */}
         <Route path="/feedback-form" element={<FeedbackForm />} />{" "}
         {/* Feedback Form route */}

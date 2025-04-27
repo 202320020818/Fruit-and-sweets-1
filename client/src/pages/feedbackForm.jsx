@@ -103,9 +103,22 @@ const FeedbackForm = () => {
         },
       });
       alert("Feedback submitted successfully!");
-      setFormData({ ...formData, review: "", image: null }); // Clear form
+      setFormData({ ...formData, orderId: "",
+        customerName: "",
+        email: "",
+        rating: 1,
+        review: "",
+        image: null,
+        recommended: "Yes",
+        response: false,
+        anonymous: false, }); // Clear form
     } catch (error) {
-      alert("Failed to submit feedback.");
+      console.error(error);
+      if (error.response && error.response.data && error.response.data.message) {
+      alert(`Failed to submit feedback: ${error.response.data.message}`);
+      } else {
+        alert("Failed to submit feedback.");
+       }
     }
   };
 
