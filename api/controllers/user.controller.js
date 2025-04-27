@@ -131,3 +131,44 @@ export const getUser = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getActiveUsers = async (req, res, next) => {
+  try {
+    const activeUsers = await User.find(); // You can later add condition like { isActive: true }
+    const usersWithoutPassword = activeUsers.map((user) => {
+      const { password, ...rest } = user._doc;
+      return rest;
+    });
+    res.status(200).json(usersWithoutPassword);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get user growth stats month by month
+export const getUserGrowth = async (req, res, next) => {
+  try {
+    const users = await User.find();
+
+    const monthlyCounts = {};
+
+    users.forEach(user => {
+      const month = user.createdAt.toLocaleString('default', { month: 'short' }); // Example: Jan, Feb
+      if (monthlyCounts[month]) {
+        monthlyCounts[month]++;
+      } else {
+        monthlyCounts[month] = 1;
+      }
+    });
+
+    // Format data for chart
+    const formattedData = Object.keys(monthlyCounts).map(month => ({
+      month,
+      users: monthlyCounts[month],
+    }));
+
+    res.status(200).json(formattedData);
+  } catch (error) {
+    next(error);
+  }
+};

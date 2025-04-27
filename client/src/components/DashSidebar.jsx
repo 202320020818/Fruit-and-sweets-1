@@ -86,6 +86,18 @@ export default function DashSidebar() {
             </Sidebar.Item>
           </Link>
 
+          <Link to="/dashboard?tab=comments">
+            <Sidebar.Item
+              className={`hover:bg-gray-200 ${
+                tab === "comments" ? "bg-gray-300" : ""
+              }`}
+              icon={HiAnnotation}
+              as="div"
+            >
+              Comments
+            </Sidebar.Item>
+          </Link>
+
           {currentUser.isAdmin && (
             <>
               <Link to="/dashboard?tab=users">
@@ -100,15 +112,15 @@ export default function DashSidebar() {
                 </Sidebar.Item>
               </Link>
 
-              <Link to="/dashboard?tab=comments">
+              <Link to="/dashboard?tab=active-users">
                 <Sidebar.Item
                   className={`hover:bg-gray-200 ${
-                    tab === "comments" ? "bg-gray-300" : ""
+                    tab === "active-users" ? "bg-gray-300" : ""
                   }`}
-                  icon={HiAnnotation}
+                  icon={HiOutlineUserGroup}
                   as="div"
                 >
-                  Comments
+                  User Growth
                 </Sidebar.Item>
               </Link>
 

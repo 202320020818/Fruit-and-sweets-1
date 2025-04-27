@@ -14,6 +14,7 @@ import AddProduct from './InsertProduct'
 import AdminDeliveryManagement from './AdminDeliveryManagement';
 import Feedback from './Feedback'; // ✅ Add this if using <Feedback />
 
+import ActiveUsers from './ActiveUsers';
 
 
 export default function Dashboard() {
@@ -50,6 +51,10 @@ export default function Dashboard() {
       {tab === "dash" && <DashboardComp />}
       {/* Render the feedback page  correct*/}
       {tab === "feedback" && <Feedback />}
+
+      {tab === "active-users" && <ActiveUsers />}
+
+
     </div>
   );
 }

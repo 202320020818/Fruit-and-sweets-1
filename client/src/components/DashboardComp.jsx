@@ -385,14 +385,14 @@ export default function DashboardComp() {
 
                 {/* Posts - Rose */}
                 <linearGradient id="colorPosts" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="#006633" /> {/* rose-500 */}
-                  <stop offset="100%" stopColor="#00b377" /> {/* rose-900 */}
+                  <stop offset="0%" stopColor="#006633" /> {/* */}
+                  <stop offset="100%" stopColor="#00b377" /> {/*  */}
                 </linearGradient>
 
                 {/* Comments - Teal */}
                 <linearGradient id="colorComments" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="#14b8a6" /> {/* teal-500 */}
-                  <stop offset="100%" stopColor="#0f766e" /> {/* teal-800 */}
+                  <stop offset="0%" stopColor="#14b8a6" /> {/*  */}
+                  <stop offset="100%" stopColor="#0f766e" /> {/*  */}
                 </linearGradient>
               </defs>
 

@@ -6,7 +6,6 @@ import { FaThumbsUp, FaEdit } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify"; // ✅ Import toast
 
-
 export default function DashComments() {
   const { currentUser } = useSelector((state) => state.user);
   const [comments, setComments] = useState([]);
@@ -22,7 +21,11 @@ export default function DashComments() {
   useEffect(() => {
     const fetchComments = async () => {
       try {
-        const res = await fetch(`/api/comment/getcomments`);
+        let url = "/api/comment/getcomments";
+        if (!currentUser.isAdmin) {
+          url = `/api/comment/getcomments?userId=${currentUser._id}`;
+        }
+        const res = await fetch(url);
         const data = await res.json();
         if (res.ok) {
           setComments(data.comments);
@@ -32,13 +35,18 @@ export default function DashComments() {
         console.log(error.message);
       }
     };
-    if (currentUser.isAdmin) fetchComments();
+
+    if (currentUser) fetchComments();
   }, [currentUser._id]);
 
   const handleShowMore = async () => {
     const startIndex = comments.length;
     try {
-      const res = await fetch(`/api/comment/getcomments?startIndex=${startIndex}`);
+      let url = `/api/comment/getcomments?startIndex=${startIndex}`;
+      if (!currentUser.isAdmin) {
+        url = `/api/comment/getcomments?userId=${currentUser._id}&startIndex=${startIndex}`;
+      }
+      const res = await fetch(url);
       const data = await res.json();
       if (res.ok) {
         setComments((prev) => [...prev, ...data.comments]);
@@ -52,9 +60,12 @@ export default function DashComments() {
   const handleDeleteComment = async () => {
     setShowModal(false);
     try {
-      const res = await fetch(`/api/comment/deleteComment/${commentIdToDelete}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(
+        `/api/comment/deleteComment/${commentIdToDelete}`,
+        {
+          method: "DELETE",
+        }
+      );
       if (res.ok) {
         setComments((prev) => prev.filter((c) => c._id !== commentIdToDelete));
         toast.success("Comment deleted!");
@@ -78,7 +89,7 @@ export default function DashComments() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           content: newComment,
-          postId: "admin-panel-post",
+          postId: `panel-post-${Date.now()}`, // 🔥 Unique postId
           userId: currentUser._id,
         }),
       });
@@ -116,12 +127,18 @@ export default function DashComments() {
               : c
           )
         );
-        toast.success("Liked the comment!");
+
+        // Check whether it was a like or unlike
+        if (data.likes.includes(currentUser._id)) {
+          toast.success("Liked the comment!");
+        } else {
+          toast.info("Unliked the comment.");
+        }
       } else {
-        toast.error("Failed to like comment.");
+        toast.error("Failed to like/unlike comment.");
       }
     } catch (error) {
-      toast.error("Error liking comment.");
+      toast.error("Error liking/unliking comment.");
       console.log(error.message);
     }
   };
@@ -173,7 +190,10 @@ export default function DashComments() {
             <p className="text-xs text-gray-500">
               {200 - newComment.length} characters left
             </p>
-            <Button gradientDuoTone="purpleToBlue" onClick={handleCreateComment}>
+            <Button
+              gradientDuoTone="purpleToBlue"
+              onClick={handleCreateComment}
+            >
               Post Comment
             </Button>
           </div>
@@ -185,7 +205,7 @@ export default function DashComments() {
         </div>
       )}
 
-      {currentUser.isAdmin && comments.length > 0 ? (
+      {comments.length > 0 ? (
         <>
           <Table hoverable className="shadow-md">
             <Table.Head>
@@ -197,8 +217,13 @@ export default function DashComments() {
             </Table.Head>
             <Table.Body className="divide-y">
               {comments.map((comment) => (
-                <Table.Row key={comment._id} className="bg-white dark:bg-gray-800">
-                  <Table.Cell>{new Date(comment.updatedAt).toLocaleDateString()}</Table.Cell>
+                <Table.Row
+                  key={comment._id}
+                  className="bg-white dark:bg-gray-800"
+                >
+                  <Table.Cell>
+                    {new Date(comment.updatedAt).toLocaleDateString()}
+                  </Table.Cell>
                   <Table.Cell>
                     {editingCommentId === comment._id ? (
                       <>
@@ -208,10 +233,17 @@ export default function DashComments() {
                           rows={2}
                         />
                         <div className="flex gap-2 mt-1">
-                          <Button size="xs" onClick={() => handleSaveEdit(comment._id)}>
+                          <Button
+                            size="xs"
+                            onClick={() => handleSaveEdit(comment._id)}
+                          >
                             Save
                           </Button>
-                          <Button size="xs" color="gray" onClick={() => setEditingCommentId(null)}>
+                          <Button
+                            size="xs"
+                            color="gray"
+                            onClick={() => setEditingCommentId(null)}
+                          >
                             Cancel
                           </Button>
                         </div>
@@ -234,7 +266,8 @@ export default function DashComments() {
                         </button>
                       </div>
                       <div className="flex items-center gap-2">
-                        {(currentUser._id === comment.userId || currentUser.isAdmin) && (
+                        {(currentUser._id === comment.userId ||
+                          currentUser.isAdmin) && (
                           <button
                             className="text-green-600 hover:scale-105"
                             onClick={() => handleEdit(comment)}
@@ -275,7 +308,12 @@ export default function DashComments() {
       )}
 
       {/* Delete Confirmation Modal */}
-      <Modal show={showModal} onClose={() => setShowModal(false)} popup size="md">
+      <Modal
+        show={showModal}
+        onClose={() => setShowModal(false)}
+        popup
+        size="md"
+      >
         <Modal.Header />
         <Modal.Body>
           <div className="text-center">
