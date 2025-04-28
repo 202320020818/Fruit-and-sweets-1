@@ -6,12 +6,16 @@ import { FaMoon, FaSun, FaShoppingCart } from "react-icons/fa";
 import { useSelector, useDispatch } from "react-redux";
 import { toggleTheme } from "../redux/theme/themeSlice";
 import { signoutSuccess } from "../redux/user/userSlice";
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 export default function Header() {
   const path = useLocation().pathname;
   const dispatch = useDispatch();
   const { currentUser } = useSelector((state) => state.user);
   const { theme } = useSelector((state) => state.theme);
+  const [searchTerm, setSearchTerm] = useState("");
+  const navigate = useNavigate();
 
   console.log("Current User: ", currentUser);
 
@@ -42,17 +46,39 @@ export default function Header() {
         </span>
         & sweets
       </Link>
-      <form>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (searchTerm.trim()) {
+            navigate(`/search?searchTerm=${searchTerm}`);
+            setSearchTerm(""); // optional: clear after search
+          }
+        }}
+      >
         <TextInput
           type="text"
           placeholder="Search..."
           rightIcon={AiOutlineSearch}
           className="hidden lg:inline"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
         />
       </form>
-      <Button className="w-12 h-10 lg:hidden" color="gray" pill>
+
+      <Button
+        onClick={() => {
+          if (searchTerm.trim()) {
+            navigate(`/search?searchTerm=${searchTerm}`);
+            setSearchTerm("");
+          }
+        }}
+        className="w-12 h-10 lg:hidden"
+        color="gray"
+        pill
+      >
         <AiOutlineSearch />
       </Button>
+
       <div className="flex gap-2 md:order-2 items-center">
         {/* Dark Mode Toggle */}
         <Button

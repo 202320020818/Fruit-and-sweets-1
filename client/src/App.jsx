@@ -25,6 +25,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 import "react-toastify/dist/ReactToastify.css";
 import Notification from "./components/Notification"; // Import Notification component
+import Search from "./pages/Search"; // Import Search component
 
 
 
@@ -39,6 +40,7 @@ export default function App() {
         <Route path="/about" element={<About />} />
         <Route path="/sign-in" element={<SignIn />} />
         <Route path="/sign-up" element={<SignUp />} />
+        <Route path="/search" element={<Search />} />
 
 
         <Route element={<PrivateRoute />}>
@@ -48,7 +50,7 @@ export default function App() {
 
         
         
-        
+  
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/products" element={<Products />} />
         <Route path="/cart" element={<CartPage />} />
@@ -64,6 +66,7 @@ export default function App() {
         <Route path="/orders/deliveryDetails" element={<DeliveryDetails />} />
         <Route path="/bankslip-upload" element={<BankSlipUpload />} />{" "}
         {/* New Bank Slip Upload route */}
+        
       </Routes>
       
       <Footer />
