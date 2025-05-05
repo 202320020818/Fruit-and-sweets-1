@@ -8,6 +8,7 @@ import {
   HiChartPie,
   HiChatAlt2,
 } from "react-icons/hi";
+
 import { FaPlusSquare, FaList, FaTruck, FaBoxOpen } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
@@ -100,29 +101,35 @@ export default function DashSidebar() {
 
           {currentUser.isAdmin && (
             <>
-              <Link to="/dashboard?tab=users">
-                <Sidebar.Item
-                  className={`hover:bg-gray-200 ${
-                    tab === "users" ? "bg-gray-300" : ""
-                  }`}
-                  icon={HiOutlineUserGroup}
-                  as="div"
-                >
-                  Users
-                </Sidebar.Item>
-              </Link>
+              <Sidebar.Collapse
+                icon={HiOutlineUserGroup}
+                label="Users Management"
+                open={["users", "active-users"].includes(tab)}
+              >
+                <Link to="/dashboard?tab=users">
+                  <Sidebar.Item
+                    icon={HiUser}
+                    className={`hover:bg-gray-200 ${
+                      tab === "users" ? "bg-gray-300" : ""
+                    }`}
+                    as="div"
+                  >
+                    Users
+                  </Sidebar.Item>
+                </Link>
 
-              <Link to="/dashboard?tab=active-users">
-                <Sidebar.Item
-                  className={`hover:bg-gray-200 ${
-                    tab === "active-users" ? "bg-gray-300" : ""
-                  }`}
-                  icon={HiOutlineUserGroup}
-                  as="div"
-                >
-                  User Growth
-                </Sidebar.Item>
-              </Link>
+                <Link to="/dashboard?tab=active-users">
+                  <Sidebar.Item
+                    icon={HiOutlineUserGroup}
+                    className={`hover:bg-gray-200 ${
+                      tab === "active-users" ? "bg-gray-300" : ""
+                    }`}
+                    as="div"
+                  >
+                    User Growth
+                  </Sidebar.Item>
+                </Link>
+              </Sidebar.Collapse>
 
               <Link to="/dashboard?tab=feedback">
                 <Sidebar.Item
