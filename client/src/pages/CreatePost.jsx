@@ -36,7 +36,7 @@ export default function CreatePost() {
     setDescription("");
     setImageBase64("");
 
-    alert("Post saved to localStorage!");
+    alert("Post saved ");
   };
 
   return (
