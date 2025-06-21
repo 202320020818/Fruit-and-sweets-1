@@ -1,4 +1,4 @@
-# fruit app
+# fruit & Sweets app
 ![image alt](https://github.com/202320020818/Fruit-and-sweets-1/blob/b35a1277e63adca910fe8043df5460812b2f6a92/Screenshot%202025-06-20%20171505.png)
 ![image alt](https://github.com/202320020818/Fruit-and-sweets-1/blob/fdf9114d184988d44734f6fd0cad76a98b3d1800/Screenshot%202025-06-20%20171529.png)
 ![image alt](https://github.com/202320020818/Fruit-and-sweets-1/blob/6380c117c3d2ce0129b30fd01b29df3541992dc8/Screenshot%202025-06-20%20171607.png)
